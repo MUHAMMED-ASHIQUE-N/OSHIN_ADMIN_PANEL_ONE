@@ -59,7 +59,7 @@ export const PieChartt: React.FC<DynamicPieChartProps> = ({ data, title,style })
             paddingAngle={2}
             fill="#8884d8"
           >
-            {data.map((entry, index) => (
+            {data.map((_, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>

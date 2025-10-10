@@ -52,7 +52,7 @@ const CompositesPageMngt: React.FC = () => {
     
     // Get all selected question IDs from the checkboxes
     const selectedQuestionIds: string[] = [];
-    formData.forEach((value, key) => {
+    formData.forEach((_, key) => {
       if (key.startsWith('question-')) {
         selectedQuestionIds.push(key.split('-')[1]);
       }
