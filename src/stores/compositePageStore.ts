@@ -1,0 +1,75 @@
+import { create } from 'zustand';
+import axios from 'axios';
+import { useAuthStore } from './authStore';
+import { useDashboardStore } from './dashboardStore'; // We'll use its filter state
+const BASE_URL = import.meta.env.VITE_API_URL 
+type ChartDataPoint = { name: string; value: number };
+
+interface CompositePageState {
+  mainChartData: ChartDataPoint[];
+  breakdownData: ChartDataPoint[];
+  isLoadingMain: boolean;
+  isLoadingBreakdown: boolean;
+  error: string | null;
+  fetchCompositePageData: (compositeId: string) => Promise<void>;
+}
+
+export const useCompositePageStore = create<CompositePageState>((set) => ({
+  mainChartData: [],
+  breakdownData: [],
+  isLoadingMain: true,
+  isLoadingBreakdown: true,
+  error: null,
+
+  fetchCompositePageData: async (compositeId) => {
+    set({ isLoadingMain: true, isLoadingBreakdown: true, error: null });
+
+    const { selectedYear, selectedPeriod, selectedMonth } = useDashboardStore.getState();
+    const token = useAuthStore.getState().token;
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+
+    try {
+      // --- Fetch data for both charts in parallel for speed ---
+      const [mainChartRes, breakdownRes] = await Promise.all([
+        // 1. Fetch main chart data (yearly, monthly, weekly average of the composite)
+        axios.get(`${BASE_URL}/admin/analytics/composite-over-time`, {
+          ...config,
+          params: {
+            year: selectedYear,
+            period: selectedPeriod,
+            month: selectedMonth,
+            compositeId: compositeId,
+          }
+        }),
+        // 2. Fetch breakdown data (average of each question in the composite for the year)
+        axios.get(`${BASE_URL}/admin/analytics/question-averages`, {
+          ...config,
+          params: {
+            startDate: `${selectedYear}-01-01`,
+            endDate: `${selectedYear}-12-31`,
+            compositeId: compositeId,
+          }
+        })
+      ]);
+
+      // --- Process and set main chart data ---
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const formattedMainData = mainChartRes.data.data.map((item: { name: string, value: number }) => {
+        if (selectedPeriod === 'Monthly') {
+          return { ...item, name: months[parseInt(item.name) - 1] };
+        }
+        if (selectedPeriod === 'Weekly') {
+            return { ...item, name: `W${parseInt(item.name) + 1}` };
+        }
+        return item;
+      });
+      set({ mainChartData: formattedMainData, isLoadingMain: false });
+
+      // --- Set breakdown data ---
+      set({ breakdownData: breakdownRes.data.data, isLoadingBreakdown: false });
+
+    } catch (err) {
+      set({ error: 'Failed to fetch composite data.', isLoadingMain: false, isLoadingBreakdown: false });
+    }
+  },
+}));
