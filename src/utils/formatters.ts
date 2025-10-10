@@ -18,7 +18,7 @@ const monthNames = [
  * @param {string} key - The date key to format.
  * @returns {string} The formatted date string.
  */
-export function formatMonthKey(key) {
+export function formatMonthKey(key: string) {
   const [year, month] = key.split("-");
   const monthIndex = parseInt(month, 10) - 1;
   return `${monthNames[monthIndex]}/${year}`;
