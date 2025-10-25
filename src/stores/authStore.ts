@@ -1,14 +1,15 @@
+// src/stores/authStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
-const BASE_URL = import.meta.env.VITE_API_URL 
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 // Define the shape of the user object
-interface IUser {
+export interface IUser {
   _id: string;
   fullName: string;
   username: string;
-  role: 'admin' | 'staff';
+  role: 'admin' | 'staff' | 'viewer';
 }
 
 // Define the shape of the store's state and actions
@@ -17,21 +18,31 @@ interface AuthState {
   user: IUser | null;
   isLoading: boolean;
   error: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  // This action will be called by our new central login page
+  setAuth: (token: string, user: IUser) => void;
   logout: () => void;
+  // We keep the login action for flexibility, but our page will use setAuth
+  // Notice the role check is removed.
+  login: (username: string, password: string) => Promise<IUser | null>;
 }
 
 // Create the store
 export const useAuthStore = create<AuthState>()(
-  // Use the 'persist' middleware to save the state to localStorage
   persist(
     (set) => ({
       token: null,
       user: null,
       isLoading: false,
       error: null,
+
+      setAuth: (token, user) => {
+        set({ token, user, isLoading: false, error: null });
+      },
+
+      logout: () => {
+        set({ token: null, user: null });
+      },
       
-      // The login action
       login: async (username, password) => {
         set({ isLoading: true, error: null });
         try {
@@ -42,24 +53,17 @@ export const useAuthStore = create<AuthState>()(
 
           const { token, data } = response.data;
           
-          // Only allow admins to log in to this panel
-          if (data.user.role !== 'admin') {
-              set({ isLoading: false, error: 'Access denied. Only admins are allowed.' });
-              return;
-          }
-
+          // Just set the auth data and return the user
           set({ token, user: data.user, isLoading: false });
+          return data.user;
+
         } catch (err) {
-          const errorMessage = axios.isAxiosError(err) && err.response 
-            ? err.response.data.message 
+          const errorMessage = axios.isAxiosError(err) && err.response
+            ? err.response.data.message
             : 'Login failed. Please try again.';
           set({ error: errorMessage, isLoading: false });
+          return null; // Return null on failure
         }
-      },
-
-      // The logout action
-      logout: () => {
-        set({ token: null, user: null });
       },
     }),
     {

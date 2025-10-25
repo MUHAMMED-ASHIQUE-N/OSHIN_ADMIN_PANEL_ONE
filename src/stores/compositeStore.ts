@@ -1,3 +1,4 @@
+// src/stores/compositeStore.ts
 import { create } from 'zustand';
 import axios from 'axios';
 import { useAuthStore } from './authStore';
@@ -7,6 +8,7 @@ export interface Composite {
   _id: string;
   name: string;
   questions: string[]; // Array of question IDs
+  category: 'room' | 'f&b'; // Added category property
 }
 
 interface CompositeState {
@@ -35,6 +37,8 @@ export const useCompositeStore = create<CompositeState>((set) => ({
       );
 
       set({ composites: filteredComposites, isLoading: false });
+      console.log({ "composites": filteredComposites});
+      
     } catch (err) {
       set({ error: 'Failed to fetch composites.', isLoading: false });
     }

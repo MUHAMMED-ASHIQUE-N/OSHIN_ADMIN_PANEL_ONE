@@ -1,3 +1,4 @@
+// src/components/common/StatCard.tsx
 type StatCardProps = {
   title: string;
   value: string | number;

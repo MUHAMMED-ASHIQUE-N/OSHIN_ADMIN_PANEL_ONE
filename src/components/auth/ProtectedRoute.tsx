@@ -1,13 +1,28 @@
+// src/components/auth/ProtectedRoute.tsx
 import React from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { Navigate, Outlet } from 'react-router-dom';
 
-const ProtectedRoute: React.FC = () => {
-  const { token } = useAuthStore();
+interface ProtectedRouteProps {
+  allowedRoles: ('admin' | 'staff' | 'viewer')[];
+}
 
-  // If there's a token, render the child routes (via <Outlet />).
-  // Otherwise, redirect to the /login page.
-  return token ? <Outlet /> : <Navigate to="/login" replace />;
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
+  const { token, user } = useAuthStore();
+
+  if (!token || !user) {
+    // Not logged in, redirect to login
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    // Logged in, but wrong role
+    // You could redirect to an "Unauthorized" page or back to login
+    return <Navigate to="/login" replace />;
+  }
+
+  // Logged in and has the correct role, render the child routes
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

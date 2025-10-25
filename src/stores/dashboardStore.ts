@@ -1,6 +1,9 @@
+
+// src/stores/dashboardStore.ts
 import { create } from 'zustand';
 import axios from 'axios';
 import { useAuthStore } from './authStore';
+import { useFilterStore } from './filterStore'; // 1. Import filter store
 const BASE_URL = import.meta.env.VITE_API_URL
 // Type for our chart data points
 type ChartDataPoint = { name: string; value: number };
@@ -47,7 +50,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     const { selectedYear, selectedPeriod, selectedMonth } = get();
     const token = useAuthStore.getState().token;
     const overallSatisfactionId = "68e91d12c5c21b687f910057"; // Your specific ID
-
+const { category } = useFilterStore.getState(); // 2. Get the category
     try {
       let response;
       const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -57,8 +60,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         // For 'Yearly', we want a single value, so we use the old endpoint
         const startDate = `${selectedYear}-01-01`;
         const endDate = `${selectedYear}-12-31`;
-         response = await axios.get<{ data: YearlyCompositeData[] }>(
-          `${BASE_URL}/admin/analytics/composite-averages?startDate=${startDate}&endDate=${endDate}`, 
+      response = await axios.get<{ data: YearlyCompositeData[] }>(
+          `${BASE_URL}/admin/analytics/composite-averages?startDate=${startDate}&endDate=${endDate}&category=${category}`, 
           config
         );
         // We need to format this response to match our chart data structure
@@ -73,6 +76,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
             period: selectedPeriod,
             month: selectedMonth.toString(),
             compositeId: overallSatisfactionId,
+            category: category // 3. Include category in the request
         });
         response = await axios.get(`${BASE_URL}/admin/analytics/composite-over-time?${params.toString()}`, config);
         
@@ -85,6 +89,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
             return { ...item, name: `W${parseInt(item.name) + 1}` };
         });
         set({ dashboardData: formattedData });
+        console.log({" dashboardData": formattedData });
+        
       }
 
     } catch (err) {

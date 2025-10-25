@@ -1,3 +1,5 @@
+// src/pages/CompositePage.tsx
+
 import React, { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { slugify } from '../utils/slugify';
@@ -6,7 +8,7 @@ import { slugify } from '../utils/slugify';
 import { useCompositeStore } from '../stores/compositeStore';
 import { useDashboardStore } from '../stores/dashboardStore';
 import { useCompositePageStore } from '../stores/compositePageStore'; // ✅ Our new store
-
+import { useFilterStore } from '../stores/filterStore'; // ✅ 1. Import the filter store
 // Import UI and Chart components
 import { BarDiagram } from '../components/Charts/BarDiagram';
 import { PieChartt } from '../components/Charts/PieChartt';
@@ -37,7 +39,7 @@ const CompositePage: React.FC = () => {
     const { composites } = useCompositeStore();
     const { selectedYear, selectedPeriod, selectedMonth } = useDashboardStore();
     const { mainChartData, breakdownData, isLoadingMain, isLoadingBreakdown, error, fetchCompositePageData } = useCompositePageStore();
-
+const { category } = useFilterStore(); // ✅ 2. Get the category state
     // Find the current composite object from the URL slug
     const currentComposite = useMemo(() => {
         return composites.find(c => slugify(c.name) === compositeSlug);
@@ -48,7 +50,7 @@ const CompositePage: React.FC = () => {
         if (currentComposite) {
             fetchCompositePageData(currentComposite._id);
         }
-    }, [currentComposite, selectedYear, selectedPeriod, selectedMonth, fetchCompositePageData]);
+    }, [currentComposite, selectedYear, selectedPeriod, selectedMonth,category, fetchCompositePageData]);
 
     // Handle loading state for the main page content
     if (!currentComposite) {

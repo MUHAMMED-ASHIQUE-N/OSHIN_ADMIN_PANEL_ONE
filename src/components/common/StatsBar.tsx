@@ -1,15 +1,18 @@
-import  { useEffect } from 'react';
+// src/components/common/StatsBar.tsx
+import { useEffect } from 'react';
 import StatCard from './StatCard';
-import { useStatsStore } from '../../stores/statsStore'; // ✅ Import store
+import { useStatsStore } from '../../stores/statsStore';
+import { useFilterStore } from '../../stores/filterStore'; // ✅ 1. Import filter store
 import { useNavigate } from 'react-router-dom';
 
 const StatsBar = () => {
-  const { stats, isLoading, fetchStats } = useStatsStore(); // ✅ Get state from store
+  const { stats, isLoading, fetchStats } = useStatsStore();
+  const { category } = useFilterStore(); // ✅ 2. Get the current category
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    fetchStats(category); // ✅ 3. Call fetchStats with the category
+  }, [fetchStats, category]); // ✅ 4. Add 'category' to dependency array
 
   // Create the data dynamically from the store's state
   const statData = [
@@ -27,12 +30,11 @@ const StatsBar = () => {
           )}
         </div>
         <div className="lg:mt-0 flex lg:justify-end">
-          {/* ✅ Make the button navigate to the new management page */}
-          <button 
+          <button
             onClick={() => navigate('/management/composites')}
             className="bg-[#5D1130] hover:bg-[#751b40] text-white font-semibold px-6 py-6 rounded-[20px] shadow transition-all w-full lg:w-auto"
           >
-            Add Ques & Composite
+            Manage Composite
           </button>
         </div>
       </div>
