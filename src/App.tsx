@@ -10,7 +10,7 @@ const CompositePage = lazy(() => import("./pages/CompositePage"));
 const CompositesPageMngt = lazy(() => import("./pages/management/CompositesPageMngt"));
 const QuestionsPage = lazy(() => import("./pages/management/QuestionsPage"));
 const UsersPage = lazy(() => import("./pages/management/UsersPage"));
-const GuestIssuesPage = lazy(() => import("./pages/management/GuestIssuesPage"));
+const YesNoResponsesPage = lazy(() => import("./pages/management/YesNoResponsesPage"));
 const SelectCategoryPage = lazy(() => import("./pages/review/SelectCategoryPage"));
 const ReviewPage = lazy(() => import("./pages/review/ReviewPage"));
 // --- End Dynamic Imports ---
@@ -80,7 +80,7 @@ function App() {
                 <Route path="composites" element={<CompositesPageMngt />} />
                 <Route path="questions" element={<QuestionsPage />} />
                 <Route path="users" element={<UsersPage />} />
-                <Route path="issues" element={<GuestIssuesPage />} />
+             <Route path="responses" element={<YesNoResponsesPage />} />
               </Route>
             </Route>
           </Route>

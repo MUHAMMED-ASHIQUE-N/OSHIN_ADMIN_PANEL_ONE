@@ -158,7 +158,7 @@ const QuestionsPage: React.FC = () => {
       </div>
 
       {/* --- Tab Content --- */}
-      <div className="bg-white rounded-lg shadow-md h-[42vh] overflow-y-scroll">
+      <div className="bg-white rounded-lg shadow-md  overflow-y-scroll">
         {isLoading && questions.length === 0 ? (
           <p className="text-center text-gray-500 p-10">Loading questions...</p>
         ) : activeTab === 'room' ? (

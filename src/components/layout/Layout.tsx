@@ -1,11 +1,11 @@
 // src/components/layout/Layout.tsx
-import { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import  { useState, useEffect } from "react"; // Added React importimport { Outlet } from "react-router-dom";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 import Nav from "./Nav";
 import { useCompositeStore } from "../../stores/compositeStore"; // ✅ Import the new store
-
+import { useFilterControlStore } from "../../stores/filterControlStore"; // ✅ Use renamed store/hook
+import { Outlet } from "react-router-dom";
 
 // This custom hook to detect mobile screen size remains the same.
 const useResponsive = () => {
@@ -24,13 +24,14 @@ export const Layout = () => {
   const isMobile = useResponsive();
   const [isSidebarOpen, setSidebarOpen] = useState(!isMobile);
   const fetchComposites = useCompositeStore((state) => state.fetchComposites); // ✅ Get the fetch action
-
+const fetchAvailableYears = useFilterControlStore((state) => state.fetchAvailableYears); // ✅ Get fetch action
 
   // Fetch composites on mount
       useEffect(() => {
     // ✅ Fetch composites once when the layout loads
     fetchComposites();
-  }, [fetchComposites]);
+    fetchAvailableYears(); // ✅ Call fetch years
+  }, [fetchComposites,fetchAvailableYears]);
   
   useEffect(() => {
     if (!isMobile) {
