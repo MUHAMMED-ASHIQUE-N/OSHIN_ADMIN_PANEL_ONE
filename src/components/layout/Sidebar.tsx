@@ -1,87 +1,151 @@
-import { NavLink, useLocation } from "react-router-dom";
-import { BarChart2 } from "lucide-react"; // Removed LayoutDashboard
+import { LayoutList, CheckSquare, LogOut } from "lucide-react"; 
 import clsx from "clsx";
 import { useCompositeStore } from "../../stores/compositeStore";
-import { useFilterStore } from "../../stores/filterStore"; // ✅ 1. Import filter store
-import { slugify } from "../../utils/slugify";
+import { useManagementStore } from "../../stores/managementStore";
+import { useFilterStore } from "../../stores/filterStore";
 import { useMemo } from "react";
-
+import { AnalyticsItemType } from "../../stores/analyticsStore";
 
 interface SidebarProps {
   isSidebarOpen: boolean;
   isMobile: boolean;
   toggleSidebar: () => void;
+  sidebarMode: AnalyticsItemType;
+  setSidebarMode: (mode: AnalyticsItemType) => void;
+  onSelectItem: (id: string, name: string, type: AnalyticsItemType) => void;
+  currentItemId: string | undefined | null;
+  onLogout: () => void; // ✅ ADDED Logout handler prop
 }
+//span
+export const Sidebar = ({
+    isSidebarOpen,
+    isMobile,
+    toggleSidebar,
+    sidebarMode,
+    setSidebarMode,
+    onSelectItem,
+    currentItemId,
+    onLogout, // ✅ ADDED
+}: SidebarProps) => {
+    const { category } = useFilterStore();
+    const { composites, isLoading: isLoadingComposites } = useCompositeStore();
+    const { questions, isLoading: isLoadingQuestions } = useManagementStore();
 
-export const Sidebar = ({ isSidebarOpen, isMobile, toggleSidebar }: SidebarProps) => {
-  const location = useLocation();
-  const composites = useCompositeStore((state) => state.composites);
-  const { category } = useFilterStore(); // ✅ 2. Get the current category
+    // Filtered lists based on category
+    const filteredComposites = useMemo(() => {
+        return (composites || []).filter(c => c && c.category === category);
+    }, [composites, category]);
 
-  // Dynamically build the navigation items based on the selected category
-  const navItems = useMemo(() => {
-    // Filter composites based on the current category from the filter store
-    const filteredComposites = composites.filter(c => c.category === category);
+    const filteredQuestions = useMemo(() => {
+        return (questions || []).filter(q => q && q.category === category);
+    }, [questions, category]);
 
-    // Create links ONLY for the filtered composites
-    const dynamicItems = filteredComposites.map(composite => ({
-        href: `/composites/${slugify(composite.name)}`,
-        icon: BarChart2,
-        label: composite.name,
-    }));
+    // Sidebar container classes
+    const sidebarClasses = clsx(
+        "bg-primary text-white transition-transform duration-300 ease-in-out",
+        "flex flex-col",
+        "overflow-hidden", 
+        {
+            "fixed inset-y-0 left-0 h-full w-64 z-50 shadow-lg": isMobile,
+            "translate-x-0": isMobile && isSidebarOpen,
+            "-translate-x-full": isMobile && !isSidebarOpen,
+            "relative w-64 flex-shrink-0 md:h-[calc(93vh-80px)] md:rounded-[20px] md:ml-2 md:mb-2 md:shadow-md": !isMobile,
+            "hidden md:flex": !isMobile,
+        }
+    );
 
-    return dynamicItems;
-  // ✅ 3. Add 'category' to the dependency array
-  }, [composites, category]);
-
-  const sidebarClasses = clsx(
-    "bg-primary text-white transition-all duration-300 ease-in-out rounded-[20px] md:ml-2 md:my-2",
-    "overflow-y-auto",
-    {
-      "fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 z-40": isMobile,
-      "transform -translate-x-full": isMobile && !isSidebarOpen,
-      "transform translate-x-0": isMobile && isSidebarOpen,
-      "relative hidden md:flex md:flex-col": !isMobile,
-      "w-64": isSidebarOpen && !isMobile,
-      "w-20": !isSidebarOpen && !isMobile,
-    }
-  );
-
-  return (
-    <>
-      {/* Overlay for mobile */}
-      {isMobile && isSidebarOpen && (
-        <div className="fixed inset-0 bg-black opacity-50 z-30 md:hidden" onClick={toggleSidebar}></div>
-      )}
-
-      <aside className={sidebarClasses}>
-        <nav className=" flex-1 py-4 ">
-          {/* Display message if no composites match the filter */}
-          {navItems.length === 0 && (
-             <p className="px-4 py-2 text-pink-100 text-sm text-center">No {category.toUpperCase()} composites found.</p>
-          )}
-          {navItems.map((item) => {
-            // isActive logic remains the same
-            const isActive = location.pathname.startsWith(item.href);
-            return (
-              <NavLink
-                key={item.href}
-                to={item.href}
+    // Item rendering function (uses button for better accessibility)
+    const renderItem = (item: { id: string, name: string, type: AnalyticsItemType }, index: number) => {
+        const isActive = item.id === currentItemId;
+        return (
+            <button
+                key={`${item.type}-${item.id}-${index}`} 
+                onClick={() => onSelectItem(item.id, item.name, item.type)}
                 className={clsx(
-                  "flex items-center px-2 py-2 mx-4 mt-1 rounded-lg hover:bg-secondary hover:text-white transition-colors duration-200 text-pink-100",
-                  { "bg-secondary text-white font-semibold": isActive }
+                    "flex items-center w-[calc(100%-1rem)] px-2 py-2 mx-auto mt-1 rounded-lg hover:bg-secondary hover:text-white transition-colors duration-200 text-pink-100 text-left",
+                    { "bg-secondary text-white font-semibold": isActive }
                 )}
-                onClick={isMobile ? toggleSidebar : undefined}
-              >
-                <item.icon className="h-6 w-6" />
-                <span className={clsx( "truncate ml-4 ", { "hidden": !isSidebarOpen && !isMobile })}>
-                  {item.label}
+                title={item.name}
+            >
+                {item.type === 'composite' ? <LayoutList className="h-5 w-5 mr-3 flex-shrink-0" /> : <CheckSquare className="h-5 w-5 mr-3 flex-shrink-0" />}
+                <span className={clsx("truncate ml-1", { "": !isSidebarOpen && !isMobile })}>
+                    {item.name}
                 </span>
-              </NavLink>
-            );
-          })}
-        </nav>
-      </aside>
-    </>
-  );
+            </button>
+        );
+    };
+
+    return (
+        <>
+            {/* Overlay for mobile */}
+            {isMobile && isSidebarOpen && (
+                <div className="fixed inset-0 bg-black opacity-50 z-40 md:hidden" onClick={toggleSidebar}></div>
+            )}
+
+            {/* Sidebar element */}
+            <aside className={sidebarClasses}>
+                {/* --- Sidebar Tabs --- */}
+                <div className="flex p-2 border-b border-secondary flex-shrink-0">
+                    <button
+                        onClick={() => setSidebarMode('composite')}
+                        className={`flex-1 py-2 px-1 text-center font-medium rounded-l-md transition-colors ${
+                            sidebarMode === 'composite' ? 'bg-secondary text-white' : 'text-pink-100 hover:bg-secondary/70'
+                        }`}
+                    >
+                        Comp
+                    </button>
+                    <button
+                        onClick={() => setSidebarMode('question')}
+                        className={`flex-1 py-2 px-1 text-center font-medium rounded-r-md transition-colors ${
+                            sidebarMode === 'question' ? 'bg-secondary text-white' : 'text-pink-100 hover:bg-secondary/70'
+                        }`}
+                    >
+                        Ques
+                    </button>
+                </div>
+
+                {/* --- Conditional List --- */}
+                {/* flex-1 allows nav to fill remaining space, overflow-y-auto handles scrolling */}
+                <nav className="flex-1 py-2 overflow-y-auto">
+                    {sidebarMode === 'composite' && (
+                        <>
+                            {isLoadingComposites && <p className="text-center text-pink-100 py-4 animate-pulse">Loading...</p>}
+                            {!isLoadingComposites && filteredComposites.length === 0 && (
+                                <p className="px-4 py-2 text-pink-100 text-sm text-center">No {category.toUpperCase()} composites found.</p>
+                            )}
+                            {filteredComposites.map((item, index) => renderItem({ id: item._id, name: item.name, type: 'composite'}, index))}
+                        </>
+                    )}
+                    {sidebarMode === 'question' && (
+                        <>
+                            {isLoadingQuestions && <p className="text-center text-pink-100 py-4 animate-pulse">Loading Questions...</p>}
+                            {!isLoadingQuestions && filteredQuestions.length === 0 && (
+                                <p className="px-4 py-2 text-pink-100 text-sm text-center">No {category.toUpperCase()} questions found.</p>
+                            )}
+                            {filteredQuestions.map((item, index) => renderItem({ id: item._id, name: item.text, type: 'question'}, index))}
+                        </>
+                    )}
+                </nav>
+
+                {/* ✅ ADDED: Logout Button Section */}
+                {/* This div is outside the <nav>, so it won't scroll */}
+                {/* flex-shrink-0 prevents it from shrinking */}
+                <div className="p-2 border-t border-secondary flex-shrink-0">
+                    <button
+                        onClick={onLogout}
+                        className={clsx(
+                            "flex items-center w-[calc(100%-1rem)] px-2 py-2 mx-auto mt-1 rounded-lg hover:bg-secondary hover:text-white transition-colors duration-200 text-pink-100 text-left",
+                            // You can add an 'active' style here if needed
+                        )}
+                        title="Logout"
+                    >
+                        <LogOut className="h-5 w-5 mr-3 flex-shrink-0" />
+                        <span className={clsx("truncate ml-1", { "md:hidden": !isSidebarOpen && !isMobile })}>
+                            Logout
+                        </span>
+                    </button>
+                </div>
+            </aside>
+        </>
+    );
 };

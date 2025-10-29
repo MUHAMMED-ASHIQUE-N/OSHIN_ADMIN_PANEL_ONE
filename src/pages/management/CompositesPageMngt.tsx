@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useMemo } from 'react';
-// Corrected import path assuming stores is one level up from pages directory
 import { useManagementStore, Composite, Question } from '../../stores/managementStore';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
-// Corrected import path assuming components is one level up from pages directory
 import Modal from '../../components/common/Modal';
 
-// --- Category-Filtered Question List Component (No changes needed) ---
+// --- Category-Filtered Question List Component ---
 interface QuestionSelectorProps {
   allQuestions: Question[];
   selectedCategory: 'room' | 'f&b';
   defaultChecked?: string[];
 }
 
+
+
+  
 const QuestionSelector: React.FC<QuestionSelectorProps> = ({ allQuestions, selectedCategory, defaultChecked = [] }) => {
   const filteredQuestions = useMemo(() => {
-    return allQuestions.filter(q => q.category === selectedCategory);
+    // Sort by order before displaying
+    return allQuestions
+      .filter(q => q.category === selectedCategory)
+      .sort((a, b) => a.order - b.order);
   }, [allQuestions, selectedCategory]);
 
   if (filteredQuestions.length === 0) {
@@ -28,12 +32,12 @@ const QuestionSelector: React.FC<QuestionSelectorProps> = ({ allQuestions, selec
           <input
             type="checkbox"
             id={`question-${q._id}`}
-            name={`question-${q._id}`}
+            name={`question-${q._id}`} // Use name to group for form submission
             value={q._id}
             defaultChecked={defaultChecked.includes(q._id)}
             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 "
           />
-          <label htmlFor={`question-${q._id}`} className="ml-2 block text-sm text-gray-900">{q.text}</label>
+          <label htmlFor={`question-${q._id}`} className="ml-2 block text-sm text-gray-900">{q.text} (Order: {q.order})</label>
         </div>
       ))}
     </div>
@@ -53,12 +57,15 @@ const CompositeList: React.FC<CompositeListProps> = ({ composites, onEdit, onDel
   if (composites.length === 0) {
     return <p className="text-gray-500 md:col-span-2">{emptyMessage}</p>;
   }
+  
+  // Sort composites by order before rendering
+  const sortedComposites = [...composites].sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {composites.map(comp => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {sortedComposites.map(comp => (
         <div key={comp._id} className={itemStyle}>
-          <span className="pr-12">{comp.name}</span>
+          <span className="pr-12">(Order: {comp.order || 0}) {comp.name}</span>
           <div className="absolute top-1/2 right-3 -translate-y-1/2 flex items-center gap-2">
             <button onClick={() => onEdit(comp)} className="p-1 text-primary/70 hover:text-primary" title="Edit">
               <Edit size={18} />
@@ -90,9 +97,8 @@ const CompositesPageMngt: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingComposite, setEditingComposite] = useState<Composite | null>(null);
   const [modalCategory, setModalCategory] = useState<'room' | 'f&b'>('room');
-  const [activeTab, setActiveTab] = useState<'room' | 'f&b'>('room'); // State for active tab
+  const [activeTab, setActiveTab] = useState<'room' | 'f&b'>('room');
 
-  // Group composites by category (no changes needed)
   const { roomComposites, fbComposites } = useMemo(() => {
     return {
       roomComposites: composites.filter(c => c.category === 'room'),
@@ -107,7 +113,6 @@ const CompositesPageMngt: React.FC = () => {
 
   const openCreateModal = () => {
     setEditingComposite(null);
-    // Default modal category based on the currently active tab
     setModalCategory(activeTab);
     setIsModalOpen(true);
   };
@@ -119,8 +124,6 @@ const CompositesPageMngt: React.FC = () => {
   };
 
   const openDeleteModal = (composite: Composite) => {
-    // Replace window.confirm with a custom modal if preferred
-    // For now, using window.confirm as per previous code
     if (window.confirm(`Are you sure you want to delete "${composite.name}"?`)) {
       deleteComposite(composite._id);
     }
@@ -136,23 +139,22 @@ const CompositesPageMngt: React.FC = () => {
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
     const category = formData.get('category') as 'room' | 'f&b';
+    const order = Number(formData.get('order') || 0); // Get order
 
     const selectedQuestionIds: string[] = [];
-    formData.forEach((_, key) => {
-      if (key.startsWith('question-')) {
-        selectedQuestionIds.push(key.split('-')[1]);
-      }
+    // Loop over checkboxes by name to get selected values
+    event.currentTarget.querySelectorAll('input[name^="question-"]:checked').forEach(input => {
+        selectedQuestionIds.push((input as HTMLInputElement).value);
     });
 
     if (!name || !category || selectedQuestionIds.length === 0) {
-       // Replace alert with a custom modal/notification if preferred
-       console.error('Validation failed: Name, category, and questions required.');
-       // Avoid using alert()
-       // alert('Please provide a name, category, and select at least one question.');
-       return;
+        console.error('Validation failed: Name, category, and questions required.');
+        // Add user-friendly feedback (e.g., toast)
+        return;
     }
-
-    const payload = { name, questions: selectedQuestionIds, category };
+    
+    // Include order in the payload
+    const payload = { name, questions: selectedQuestionIds, category, order };
 
     if (editingComposite) {
       updateComposite(editingComposite._id, payload);
@@ -224,7 +226,7 @@ const CompositesPageMngt: React.FC = () => {
       </div>
 
 
-      {/* --- MODAL FOR CREATE/EDIT (No changes needed here) --- */}
+      {/* --- MODAL FOR CREATE/EDIT --- */}
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         <form onSubmit={handleFormSubmit}>
           <h2 className="text-2xl font-bold text-gray-800 mb-6">
@@ -233,7 +235,7 @@ const CompositesPageMngt: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-4">
             {/* Name Input */}
-            <div className="mb-4 col-span-2">
+            <div className="mb-4 col-span-1">
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">Composite Name</label>
               <input
                 type="text" name="name" id="name"
@@ -241,6 +243,19 @@ const CompositesPageMngt: React.FC = () => {
                 className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 required autoFocus
               />
+            </div>
+
+            {/* Order Input */}
+            <div className="mb-4 col-span-1">
+                <label htmlFor="order" className="block text-sm font-medium text-gray-700">Order</label>
+                <input
+                  type="number"
+                  name="order"
+                  id="order"
+                  defaultValue={editingComposite?.order || 0}
+                  className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
             </div>
 
             {/* Category Select */}
@@ -281,4 +296,3 @@ const CompositesPageMngt: React.FC = () => {
 };
 
 export default CompositesPageMngt;
-

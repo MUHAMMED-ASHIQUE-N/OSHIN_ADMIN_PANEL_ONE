@@ -322,7 +322,7 @@ const ReviewPage: React.FC = () => {
                     {/* --- Open Feedback Section --- */}
                     <section className="mt-6">
                         <label className="text-sm font-medium text-gray-700 mb-2 block"> {/* Added block */}
-                            Please tell us your overall experience:
+                           Please tell us your overall experience and in particular any memorable experience or exceptional associate you have encountered during your stay (please be specific)
                         </label>
                         <textarea
                             value={description}

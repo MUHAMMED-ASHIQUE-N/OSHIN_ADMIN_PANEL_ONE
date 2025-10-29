@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'; // Added useNavigate
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom' // Added useNavigate
 import {
   Layers,
   HelpCircle,
@@ -11,8 +11,10 @@ import {
   ListChecks,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
-import Nav from '../../components/layout/Nav'; // Assuming Nav might contain the hamburger for md and below
+import Nav from '../../components/layout/Nav';
 import clsx from 'clsx'; // Utility for conditional classes
+// Import category store
+import { useFilterStore } from '../../stores/filterStore';
 
 const managementNavItems = [
   { href: '/management/composites', icon: Layers, label: 'Composite' },
@@ -23,8 +25,11 @@ const managementNavItems = [
 
 const ManagementLayout: React.FC = () => {
   const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State controls mobile sidebar visibility
+
+  // ✅ Get category state from filter store
+  const { category, setCategory } = useFilterStore();
 
   const handleLogout = () => {
     logout();
@@ -44,18 +49,26 @@ const ManagementLayout: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
-      {/* Pass toggle function to Nav if hamburger is there */}
-      {/* <Nav toggleSidebar={toggleSidebar} /> */}
-      {/* OR add a simple header bar here for the hamburger */}
-       <div className="md:hidden flex items-center justify-between p-4 bg-white shadow sticky top-0 z-40">
-           {/* Placeholder Logo/Title */}
-            <span className="text-lg font-bold text-primary">Management</span>
-            <button onClick={toggleSidebar} className="text-gray-600 hover:text-primary">
-                <Menu size={24} />
-            </button>
-       </div>
-      {/* If using a separate header like above, Nav might not be needed or only for desktop */}
-       <div className="hidden md:block"> <Nav /> </div>
+      {/* Mobile Header for Management section.
+        The main Nav component (with category toggle) is used by the *analytics* layout,
+        but this management layout needs its own Nav or header.
+        We'll use a simplified header for mobile and the full Nav for desktop.
+      */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-white shadow sticky top-0 z-40">
+           <span className="text-lg font-bold text-primary">Management</span>
+           <button onClick={toggleSidebar} className="text-gray-600 hover:text-primary">
+               <Menu size={24} />
+           </button>
+      </div>
+
+      {/* Desktop Nav: Pass the required category props */}
+      <div className="hidden md:block">
+        <Nav
+            category={category}
+            setCategory={setCategory}
+            // Pass dummy/empty functions for props Nav expects but this layout doesn't use
+        />
+      </div>
 
 
       <div className="flex flex-1 overflow-hidden"> {/* Container for sidebar + content */}
@@ -76,16 +89,16 @@ const ManagementLayout: React.FC = () => {
             'transition-transform duration-300 ease-in-out',
             // Mobile/Tablet: Slide in/out
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
-            // Desktop: Always visible, relative positioning within flex container
-            'md:relative md:translate-x-0 md:shadow-md md:rounded-[20px] md:ml-2 md:my-2 md:h-[calc(100vh-80px)]' // Adjust height based on Nav/Header
+            // Desktop: Always visible, relative positioning
+            'md:relative md:translate-x-0 md:shadow-md md:rounded-[20px] md:ml-2 md:my-2 md:h-[calc(100vh-80px)]' // Adjust height based on Nav
           )}
         >
           {/* Sidebar Header */}
           <div className="p-4 font-bold text-xl border-b border-secondary text-white flex items-center justify-between">
             <div className='flex items-center'>
                 <Link
-                    to={'/'}
-                    onClick={handleLinkClick} // Close sidebar on back click
+                    to={'/'} // Link back to main dashboard
+                    onClick={handleLinkClick}
                     className='p-1 rounded-full hover:bg-white hover:text-primary'
                     title="Back to Dashboard"
                 >
@@ -113,8 +126,8 @@ const ManagementLayout: React.FC = () => {
                   )
                 }
               >
-                <item.icon className="h-5 w-5 mr-3 flex-shrink-0" /> {/* Added flex-shrink-0 */}
-                <span className="truncate">{item.label}</span> {/* Added truncate */}
+                <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </NavLink>
             ))}
           </nav>
@@ -132,8 +145,7 @@ const ManagementLayout: React.FC = () => {
         </aside>
 
         {/* --- Main Content Area --- */}
-        {/* Takes remaining space, scrolls internally */}
-        <main className="flex-1 overflow-y-auto p-6 bg-background"> {/* Added bg-background */}
+        <main className="flex-1 overflow-y-auto p-6 bg-background">
           <Outlet /> {/* Child routes render here */}
         </main>
       </div>

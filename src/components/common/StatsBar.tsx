@@ -1,44 +1,70 @@
-// src/components/common/StatsBar.tsx
-import { useEffect } from 'react';
+import  { useState, useEffect } from 'react'; // Import useState
 import StatCard from './StatCard';
 import { useStatsStore } from '../../stores/statsStore';
-import { useFilterStore } from '../../stores/filterStore'; // ✅ 1. Import filter store
+import { useFilterStore } from '../../stores/filterStore';
 import { useNavigate } from 'react-router-dom';
+import CategorySelectionModal from './CategorySelectionModal'; // ✅ Import the new modal
 
 const StatsBar = () => {
   const { stats, isLoading, fetchStats } = useStatsStore();
-  const { category } = useFilterStore(); // ✅ 2. Get the current category
+  const { category } = useFilterStore();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchStats(category); // ✅ 3. Call fetchStats with the category
-  }, [fetchStats, category]); // ✅ 4. Add 'category' to dependency array
+  // ✅ State to control the modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Create the data dynamically from the store's state
+  useEffect(() => {
+    fetchStats(category);
+  }, [fetchStats, category]);
+
+  // ✅ Handler for when the modal submits
+  const handleModalSubmit = (selectedCategory: 'room' | 'f&b') => {
+    navigate(`/compare/${selectedCategory}`);
+    setIsModalOpen(false);
+  };
+
   const statData = [
-    { title: "Total Reviews", value: isLoading ? '...' : stats.totalReviews },
-    { title: "Total Staff", value: isLoading ? '...' : stats.totalStaff },
-    { title: "Active Staff", value: isLoading ? '...' : stats.activeStaff },
+    { title: "Total Reviews", value: isLoading ? "..." : stats.totalReviews },
+    { title: "Total Staff", value: isLoading ? "..." : stats.totalStaff },
+    { title: "Active Staff", value: isLoading ? "..." : stats.activeStaff },
   ];
 
   return (
-    <div className="py-3 bg-gray-50 border-b border-gray-100">
-      <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-5 mx-4">
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 flex-1">
-          {statData.map(card =>
-            <StatCard key={card.title} title={card.title} value={card.value} />
-          )}
-        </div>
-        <div className="lg:mt-0 flex lg:justify-end">
-          <button
-            onClick={() => navigate('/management/composites')}
-            className="bg-[#5D1130] hover:bg-[#751b40] text-white font-semibold px-6 py-6 rounded-[20px] shadow transition-all w-full lg:w-auto"
-          >
-            Manage Composite
-          </button>
+    <> {/* ✅ Use fragment to render modal alongside */}
+      <div className="py-3">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-5 mx-4">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 flex-1">
+            {statData.map((card) => (
+              <StatCard key={card.title} title={card.title} value={card.value} />
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row lg:justify-end gap-4"> {/* ✅ Group buttons */}
+            {/* Compare Data Button */}
+            <button
+              onClick={() => setIsModalOpen(true)} // ✅ Open modal
+              className="bg-[#5D1130] hover:bg-[#751b40] text-white font-semibold px-6 py-6 rounded-[20px] shadow transition-all w-full lg:w-auto"
+            >
+              Compare Data
+            </button>
+
+            {/* Manage Composite Button */}
+            <button
+              onClick={() => navigate("/management/composites")}
+              className="bg-[#5D1130] hover:bg-[#751b40] text-white font-semibold px-6 py-6 rounded-[20px] shadow transition-all w-full lg:w-auto"
+            >
+              Manage Composite
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* ✅ Render the modal */}
+      <CategorySelectionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleModalSubmit}
+      />
+    </>
   );
 };
 

@@ -17,12 +17,16 @@ const QuestionList: React.FC<QuestionListProps> = ({ list, onEdit, onDelete, emp
   if (list.length === 0) {
      return <p className="text-gray-500 text-center p-4">{emptyMessage}</p>;
   }
+  
+  // Sort list by order before rendering
+  const sortedList = [...list].sort((a, b) => (a.order || 0) - (b.order || 0));
+
   return (
     <ul className="divide-y divide-gray-200">
-      {list.map(q => (
+      {sortedList.map(q => (
         <li key={q._id} className="flex items-center justify-between p-3 hover:bg-gray-50">
           <div>
-            <span className="font-medium text-gray-700">{q.text}</span>
+            <span className="font-medium text-gray-700">(Order: {q.order || 0}) {q.text}</span>
             <span className="ml-3 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full capitalize">{q.questionType.replace('_', '/')}</span>
           </div>
           <div className="flex items-center gap-4">
@@ -53,9 +57,8 @@ const QuestionsPage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [activeTab, setActiveTab] = useState<'room' | 'f&b'>('room'); // State for active tab
+  const [activeTab, setActiveTab] = useState<'room' | 'f&b'>('room');
 
-  // Group questions by category (no changes needed)
   const { roomQuestions, fbQuestions } = useMemo(() => {
     return {
       roomQuestions: questions.filter(q => q.category === 'room'),
@@ -69,8 +72,6 @@ const QuestionsPage: React.FC = () => {
 
   const openCreateModal = () => {
     setEditingQuestion(null);
-    // Default modal category based on the currently active tab
-    // No need to set modalCategory state here, just pass default value to modal form
     setIsModalOpen(true);
   };
 
@@ -80,12 +81,9 @@ const QuestionsPage: React.FC = () => {
   };
 
   const openDeleteModal = (question: Question) => {
-    // Replace window.confirm if needed
-    // Using console.error instead of alert/confirm
-    console.log(`Attempting to delete question: "${question.text}"`);
-    // If you need confirmation, implement a custom modal
-    // For now, proceeding with deletion logic based on previous code
-    deleteQuestion(question._id);
+    if (window.confirm(`Are you sure you want to delete "${question.text}"? This action cannot be undone.`)) {
+        deleteQuestion(question._id);
+    }
   };
 
   const closeModal = () => {
@@ -99,14 +97,16 @@ const QuestionsPage: React.FC = () => {
     const text = formData.get('text') as string;
     const category = formData.get('category') as 'room' | 'f&b';
     const questionType = formData.get('questionType') as 'rating' | 'yes_no';
+    const order = Number(formData.get('order') || 0); // Get order
 
     if (!text || !category || !questionType) {
        console.error('Validation failed: All fields are required.');
-      // Avoid alert()
-      return;
+       // Add user-friendly feedback (e.g., toast)
+       return;
     }
 
-    const payload = { text, category, questionType };
+    // Include order in the payload
+    const payload = { text, category, questionType, order };
 
     if (editingQuestion) {
       updateQuestion(editingQuestion._id, payload);
@@ -118,7 +118,6 @@ const QuestionsPage: React.FC = () => {
 
 
   return (
-    // Changed primary color styling to use text-primary instead of inline style
     <div className="text-primary border-[3px] border-primary rounded-[20px] p-6 bg-white shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Manage Questions</h1>
@@ -193,19 +192,18 @@ const QuestionsPage: React.FC = () => {
               id="text"
               defaultValue={editingQuestion?.text || ''}
               rows={4}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" // Updated focus colors
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
               required
               autoFocus
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {/* Category Select */}
             <div className="mb-4">
               <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
               <select
                 name="category" id="category"
-                // Default value is now based on activeTab if creating, else editingQuestion's category
                 defaultValue={editingQuestion ? editingQuestion.category : activeTab}
                 className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               >
@@ -226,6 +224,19 @@ const QuestionsPage: React.FC = () => {
                 <option value="yes_no">Yes / No</option>
               </select>
             </div>
+            
+            {/* Order Input */}
+            <div className="mb-4">
+                <label htmlFor="order" className="block text-sm font-medium text-gray-700">Order</label>
+                <input
+                  type="number"
+                  name="order"
+                  id="order"
+                  defaultValue={editingQuestion?.order || 0}
+                  className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+            </div>
           </div>
 
           <div className="mt-6 flex justify-end gap-3">
@@ -239,4 +250,3 @@ const QuestionsPage: React.FC = () => {
 };
 
 export default QuestionsPage;
-

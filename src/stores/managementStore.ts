@@ -12,6 +12,8 @@ export interface Question {
   text: string;
   category: 'room' | 'f&b';
   questionType: 'rating' | 'yes_no';
+order: number; // ✅ ADDED order
+  
 }
 
 export interface Composite {
@@ -19,6 +21,7 @@ export interface Composite {
   name: string;
   questions: string[]; // Array of question IDs
   category: 'room' | 'f&b';
+order: number; // ✅ ADDED order
 }
 
 // Renamed from Staff to ManagementUser
@@ -145,9 +148,11 @@ export const useManagementStore = create<ManagementState>((set, get) => ({
         headers: { Authorization: `Bearer ${token}` }
       });
       set({ questions: res.data.data.questions, isLoading: false });
-      console.log({ "questions": res.data.data.questions});
+console.log("managementStore: Fetched Questions from API:", res.data.data.questions);
     } catch (err) {
-      set({ error: 'Failed to fetch questions', isLoading: false });
+      console.error("managementStore: Failed to fetch questions", err); // Log error
+      let errorMsg = 'Failed to fetch questions';
+      set({ error: errorMsg, isLoading: false, questions: [] }); // Set empty array on error
     }
   },
 
