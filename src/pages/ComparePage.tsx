@@ -1,3 +1,5 @@
+//pages/comparePage.tsx
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useComparisonStore } from "../stores/comparisonStore";
@@ -11,12 +13,7 @@ import { useFilterStore } from "../stores/filterStore";
 import { useAuthStore } from "../stores/authStore"; // ✅ 1. Import auth store
 import { ArrowLeft } from "lucide-react"; // For back button
 
-// Helper to format date as YYYY-MM-DD
-// const getISODate = (offsetDays: number = 0): string => {
-//   const date = new Date();
-//   date.setDate(date.getDate() + offsetDays);
-//   return date.toISOString().split("T")[0];
-// };
+
 
 const ComparePage: React.FC = () => {
   const { category } = useParams<{ category: "room" | "f&b" }>();

@@ -1,3 +1,5 @@
+//pages/management/QuestionPage.tsx
+
 import React, { useState, useEffect, useMemo } from 'react';
 // Corrected import path assuming stores is two levels up
 import { useManagementStore, Question } from '../../stores/managementStore';

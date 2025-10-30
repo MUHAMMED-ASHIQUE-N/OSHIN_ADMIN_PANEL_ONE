@@ -1,4 +1,5 @@
-import logo from "../../assets/logo/Oshin_Calicut_Logo.jpg";
+//components/layout/Nav.tsx
+import logo from "../../assets/logo/logo.png";
 import { FaUserCircle } from "react-icons/fa";
 // import { Menu } from "lucide-react"; // No longer needed
 import { useAuthStore } from "../../stores/authStore";

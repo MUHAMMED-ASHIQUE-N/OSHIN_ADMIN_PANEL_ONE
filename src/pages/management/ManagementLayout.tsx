@@ -1,3 +1,4 @@
+//pages/management/Layout.tsx
 import React, { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom' // Added useNavigate
 import {

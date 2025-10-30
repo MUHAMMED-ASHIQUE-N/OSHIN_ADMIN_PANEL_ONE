@@ -1,5 +1,6 @@
+//components/common/CategorySelectionModal.tsx
 import React from 'react';
-import Modal from './Modal'; // Assuming Modal.tsx is in this folder
+import Modal from './Modal';
 import { Hotel, Utensils } from 'lucide-react';
 
 type Category = 'room' | 'f&b';

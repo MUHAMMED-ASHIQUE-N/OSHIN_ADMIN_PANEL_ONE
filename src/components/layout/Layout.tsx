@@ -1,3 +1,4 @@
+//components/layout/Layout.tsx
 import  { useState, useEffect, useCallback, useRef } from "react"; // Import useRef
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { Header } from "./Header";

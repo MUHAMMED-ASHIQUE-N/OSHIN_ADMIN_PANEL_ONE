@@ -1,3 +1,4 @@
+//pages/management/CompositesPageMngt.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useManagementStore, Composite, Question } from '../../stores/managementStore';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';

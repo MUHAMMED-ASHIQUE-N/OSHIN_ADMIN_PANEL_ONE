@@ -1,3 +1,5 @@
+//components/common/FilterBar.tsx
+
 import React, { useState, useEffect } from 'react';
 import { FaChartBar, FaCalendarAlt } from "react-icons/fa"; // Added Calendar icon
 import { GoGraph } from "react-icons/go";

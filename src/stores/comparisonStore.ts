@@ -1,3 +1,5 @@
+//stores/comparisonStore.ts
+
 import { create } from 'zustand';
 import axios from 'axios';
 import { useAuthStore } from './authStore';

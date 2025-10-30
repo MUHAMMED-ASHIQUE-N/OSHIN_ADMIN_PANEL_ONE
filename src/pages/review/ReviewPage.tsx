@@ -1,3 +1,5 @@
+//pages/review/ReviewPage.tsx
+
 import React, { useState, useEffect, useMemo } from "react";
 // Assuming stores is two levels up
 import { useReviewStore } from "../../stores/reviewStore";
@@ -267,7 +269,8 @@ const ReviewPage: React.FC = () => {
                               </tr>
                               <tr className=" font-semibold text-gray-600">
                                   <th className="pb-2 w-2/5 text-left">Please rate your experience</th>
-                                  {["01","02","03","04","05","06","07","08","09","10"].map((num) => (
+                                  {/* --- MODIFICATION 1: Reversed header array --- */}
+                                  {["10","09","08","07","06","05","04","03","02","01"].map((num) => (
                                       <th key={num} className="pb-2 font-medium w-[4%]">{num}</th>
                                   ))}
                               </tr>
@@ -276,15 +279,19 @@ const ReviewPage: React.FC = () => {
                               {ratingQuestions.map((q) => (
                                   <tr key={q._id} className="align-middle border-t"> {/* Added border-t */}
                                       <td className="py-2 pr-4">{q.text}</td>
-                                      {Array.from({ length: 10 }).map((_, j) => (
-                                          <RadioBox
-                                              key={j}
-                                              name={q._id}
-                                              value={`${j + 1}`}
-                                              checked={answers[q._id] === j + 1}
-                                              onChange={() => setAnswer(q._id, j + 1)}
-                                          />
-                                      ))}
+                                      {/* --- MODIFICATION 2: Reversed rating logic --- */}
+                                      {Array.from({ length: 10 }).map((_, j) => {
+                                          const ratingValue = 10 - j; // j=0 -> 10, j=1 -> 9, ..., j=9 -> 1
+                                          return (
+                                              <RadioBox
+                                                  key={j}
+                                                  name={q._id}
+                                                  value={`${ratingValue}`}
+                                                  checked={answers[q._id] === ratingValue}
+                                                  onChange={() => setAnswer(q._id, ratingValue)}
+                                              />
+                                          );
+                                      })}
                                   </tr>
                               ))}
                           </tbody>
@@ -383,3 +390,4 @@ const ReviewPage: React.FC = () => {
 };
 
 export default ReviewPage;
+

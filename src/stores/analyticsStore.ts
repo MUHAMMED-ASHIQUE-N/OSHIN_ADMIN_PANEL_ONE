@@ -1,3 +1,5 @@
+//store/analyticsStore.ts
+
 import { create } from 'zustand';
 import axios, { AxiosResponse } from 'axios';
 import { useAuthStore } from './authStore';

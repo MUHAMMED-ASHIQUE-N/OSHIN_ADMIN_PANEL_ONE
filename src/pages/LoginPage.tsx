@@ -1,3 +1,4 @@
+//pages/LoginPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';

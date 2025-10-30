@@ -1,3 +1,4 @@
+//App.tsx
 import React, { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom"; // Added useNavigate
 import { ChartProvider } from "./context/ChartContext";
@@ -15,8 +16,7 @@ const GuestIssuesPage = lazy(() => import("./pages/management/YesNoResponsesPage
 const SelectCategoryPage = lazy(() => import("./pages/review/SelectCategoryPage"));
 const ReviewPage = lazy(() => import("./pages/review/ReviewPage"));
 const ComparePage = lazy(()=> import("./pages/ComparePage") )
-
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+const ProtectedRoute = lazy(()=>import("./components/auth/ProtectedRoute"))
 import { useCompositeStore } from "./stores/compositeStore";
 import { useFilterStore } from "./stores/filterStore";
 import { useAnalyticsStore } from "./stores/analyticsStore";

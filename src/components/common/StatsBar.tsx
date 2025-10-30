@@ -1,3 +1,4 @@
+//components/common/StatsBar.tsx
 import  { useState, useEffect } from 'react'; // Import useState
 import StatCard from './StatCard';
 import { useStatsStore } from '../../stores/statsStore';
