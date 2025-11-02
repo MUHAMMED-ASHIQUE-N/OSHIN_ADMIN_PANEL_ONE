@@ -137,12 +137,12 @@ export const FilterBar: React.FC = () => {
                     onClick={() => setActiveChart(item.type)}
                     className={`flex items-center justify-center text-2xl rounded-full w-8 h-8 cursor-pointer transition-colors ${
                     isActive
-                        ? "bg-pink-100 p-1 text-primary" // Adjusted padding
-                        : "text-pink-100 hover:bg-secondary/80"
+                        ? "bg-secondary p-1 text-pink-100" // Adjusted padding
+                        : "text-pink-100 hover:bg-secondary/80 "
                     }`}
                     title={`View as ${item.type} chart`}
                 >
-                    <IconComponent />
+                    <IconComponent className={ `${isActive? 'p-1' : 'p-0'}`} />
                 </span>
                 );
             })}

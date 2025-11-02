@@ -186,34 +186,72 @@ const ReviewPage: React.FC = () => {
         navigate("/review/select");
     };
 
-    if (isLoading) {
-       return (
-             <div className="min-h-screen flex items-center justify-center">
-                 <p className="text-xl text-primary animate-pulse">Loading Questions...</p>
-             </div>
-        );
-    }
+   const [showButton, setShowButton] = useState(false);
 
+useEffect(() => {
+    let timer:number;
     if (page === "thankyou") {
-         return (
-          <div className="min-h-screen flex items-center justify-center bg-gray-100">
-              <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                   <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
-                  <p className="text-lg text-gray-700 mb-8">
-                      Your feedback has been submitted successfully.
-                  </p>
-                  <button
-                      onClick={handleReset}
-                      className="px-8 py-3 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-opacity-90 transition-colors"
-                  >
-                      Submit Another Review
-                  </button>
-              </div>
-          </div>
-        );
+        // Hide button initially
+        setShowButton(false); 
+        
+        // Set a timer to show the button after 1 minute
+        timer = setTimeout(() => {
+            setShowButton(true);
+        }, 60000); // 60,000 milliseconds
     }
+    
+    // Cleanup timer if the component unmounts
+    return () => {
+        if (timer) {
+            clearTimeout(timer);
+        }
+    };
+}, [page]); // Rerun this effect if the 'page' changes
 
+// --- Your existing logic ---
+
+
+    if (isLoading) {
+       return (
+             <div className="min-h-screen flex items-center justify-center">
+                 <p className="text-xl text-primary animate-pulse">Loading Questions...</p>
+             </div>
+        );
+    }
+
+// --- UPDATED "Thank You" Block ---
+    if (page === "thankyou") {
+         return (
+          <div className="min-h-screen flex items-center justify-center bg-gray-100">
+              <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+                   <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
+                  
+                  {/* --- New Text --- */}
+                  <p className="text-lg text-gray-700 mb-2">
+                      Looking forward to welcome you back
+                  </p>
+                  <p className="text-md text-gray-600 mb-8">
+_                  Yet another Remarkable stay with Oshin Hotels & Resorts
+                  </p>
+                  {/* --- End New Text --- */}
+
+                  {/* --- Conditional Button --- */}
+                  <div className="h-[48px]"> {/* Placeholder to prevent layout jump */}
+                    {showButton && (
+                      <button
+                          onClick={handleReset}
+                          className="px-8 py-3 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-opacity-90 transition-colors"
+                      >
+                          Submit Another Review
+                      </button>
+                    )}
+                  </div>
+                  {/* --- End Conditional Button --- */}
+              </div>
+          </div>
+        );
+    }
 
     return (
         // Design remains unchanged from your provided code

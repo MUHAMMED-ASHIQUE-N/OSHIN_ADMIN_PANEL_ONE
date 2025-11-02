@@ -1,5 +1,4 @@
 //pages/comparePage.tsx
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useComparisonStore } from "../stores/comparisonStore";
@@ -10,85 +9,94 @@ import { BarDiagram } from "../components/Charts/BarDiagram"; // Import chart
 import { useCompositeStore } from "../stores/compositeStore";
 import { useManagementStore } from "../stores/managementStore";
 import { useFilterStore } from "../stores/filterStore";
-import { useAuthStore } from "../stores/authStore"; // ✅ 1. Import auth store
+import { useAuthStore } from "../stores/authStore";
 import { ArrowLeft } from "lucide-react"; // For back button
 
 
 
 const ComparePage: React.FC = () => {
-  const { category } = useParams<{ category: "room" | "f&b" }>();
-  const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout); // ✅ 2. Get logout function
+  const { category } = useParams<{ category: "room" | "f&b" }>();
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout); // Get logout function
 
-  // --- Local State ---
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile sidebar
-  const [sidebarMode, setSidebarMode] =
-    useState<AnalyticsItemType>("composite");
+  // --- Local State ---
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile sidebar
+  const [sidebarMode, setSidebarMode] =
+    useState<AnalyticsItemType>("composite");
 
-  // --- Global State ---
-  const setGlobalCategory = useFilterStore((state) => state.setCategory);
-  const {  fetchComposites } = useCompositeStore();
-  const {  fetchQuestions } = useManagementStore();
-  const {
-    selectedItem,
-    dateRangeA,
-    dateRangeB,
-    comparisonData,
-    isLoading,
-    error,
-    setSelectedItem,
-    setDateRangeA,
-    setDateRangeB,
-    fetchComparisonData,
-  } = useComparisonStore();
+  // --- Global State ---
+  const setGlobalCategory = useFilterStore((state) => state.setCategory);
+  
+  // ✅ Get data *and* fetch functions from stores
+  const { composites, fetchComposites } = useCompositeStore();
+  const { questions, fetchQuestions } = useManagementStore();
 
-  // --- Effects ---
-  useEffect(() => {
-    if (category) {
-      setGlobalCategory(category);
-    } else {
-      navigate("/"); // Redirect home if no category
+  const {
+    selectedItem,
+    dateRangeA,
+    dateRangeB,
+    comparisonData,
+    isLoading,
+    error,
+    setSelectedItem,
+    setDateRangeA,
+    setDateRangeB,
+    fetchComparisonData,
+  } = useComparisonStore();
+
+  // --- Effects ---
+  useEffect(() => {
+    if (category) {
+      setGlobalCategory(category);
+    } else {
+      navigate("/"); // Redirect home if no category
+    }
+  }, [category, setGlobalCategory, navigate]);
+
+  // ✅ OPTIMIZATION: Only fetch if data is not already in the store
+  useEffect(() => {
+    if (composites.length === 0) {
+      fetchComposites();
     }
-  }, [category, setGlobalCategory, navigate]);
+    if (questions.length === 0) {
+      fetchQuestions();
+    }
+    // Only re-run if fetch functions change or lengths go from 0 to non-0
+  }, [fetchComposites, fetchQuestions, composites.length, questions.length]);
 
-  useEffect(() => {
-    fetchComposites();
-    fetchQuestions();
-  }, [fetchComposites, fetchQuestions]);
+  // --- Handlers ---
+  const handleSelectItem = (
+    id: string,
+    name: string,
+    type: AnalyticsItemType
+  ) => {
+    setSelectedItem({ id, name, type });
+    if (window.innerWidth < 768) setIsSidebarOpen(false);
+  };
 
-  // --- Handlers ---
-  const handleSelectItem = (
-    id: string,
-    name: string,
-    type: AnalyticsItemType
-  ) => {
-    setSelectedItem({ id, name, type });
-    if (window.innerWidth < 768) setIsSidebarOpen(false);
-  };
+  const handleRunComparison = () => {
+    if (!selectedItem || !category) return;
+    fetchComparisonData(category);
+  };
 
-  const handleRunComparison = () => {
-    if (!selectedItem || !category) return;
-    fetchComparisonData(category);
-  };
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  // Create logout handler for this page
+  const handleLogout = () => {
+    logout();
+    navigate('/login'); // Redirect to login
+  };
 
-  // ✅ 3. Create logout handler for this page
-  const handleLogout = () => {
-    logout();
-    navigate('/login'); // Redirect to login
-  };
+  // --- Local Date State ---
+  const [localDateA_start, setLocalDateA_start] = useState(dateRangeA.start);
+  const [localDateA_end, setLocalDateA_end] = useState(dateRangeA.end);
+  const [localDateB_start, setLocalDateB_start] = useState(dateRangeB.start);
+  const [localDateB_end, setLocalDateB_end] = useState(dateRangeB.end);
 
-  // --- Local Date State ---
-  const [localDateA_start, setLocalDateA_start] = useState(dateRangeA.start);
-  const [localDateA_end, setLocalDateA_end] = useState(dateRangeA.end);
-  const [localDateB_start, setLocalDateB_start] = useState(dateRangeB.start);
-  const [localDateB_end, setLocalDateB_end] = useState(dateRangeB.end);
-
-  const handleApplyDateA = () =>
-    setDateRangeA({ start: localDateA_start, end: localDateA_end });
-  const handleApplyDateB = () =>
-    setDateRangeB({ start: localDateB_start, end: localDateB_end });
+  const handleApplyDateA = () =>
+    setDateRangeA({ start: localDateA_start, end: localDateA_end });
+  const handleApplyDateB = () =>
+    setDateRangeB({ start: localDateB_start, end: localDateB_end });
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
