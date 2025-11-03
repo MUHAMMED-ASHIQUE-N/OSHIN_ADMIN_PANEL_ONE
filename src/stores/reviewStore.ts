@@ -12,12 +12,12 @@ export interface ApiQuestion {
 }
 
 // Define the payload for submission
-interface AnswerPayload {
+export interface AnswerPayload {
   question: string;
   rating?: number;
   answerBoolean?: boolean;
 }
-interface ReviewPayload {
+export interface ReviewPayload {
   category: 'room' | 'f&b';
   answers: AnswerPayload[];
   description?: string;
@@ -29,7 +29,7 @@ interface ReviewPayload {
 }
 
 // Define the state and actions for the store
-interface ReviewState {
+ interface ReviewState {
   questions: ApiQuestion[];
   // Answers can be a number (rating) or boolean (yes/no)
   answers: Record<string, number | boolean | null>;
