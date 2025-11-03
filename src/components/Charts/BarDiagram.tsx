@@ -49,10 +49,10 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload, label }) => {
  * - Green: value >= 9 (Covers 9-10)
  */
 const getColorForValue = (value: number) => {
-  if (value < 6) {
-    return "#EF4444"; // Tailwind Red-500
+  if (value < 5) {
+    return "#FF0000"; // Tailwind Red-500
   }
-  if (value >= 6 && value < 9) {
+  if (value >= 5 && value < 9) {
     return "#F97316"; // Tailwind Orange-500
   }
   if (value >= 9) {
