@@ -189,12 +189,11 @@ const QuestionsPage: React.FC = () => {
           {/* Text Input */}
           <div className="mb-4">
             <label htmlFor="text" className="block text-sm font-medium text-gray-700">Question Text</label>
-            <textarea
+            <input
               name="text"
               id="text"
               defaultValue={editingQuestion?.text || ''}
-              rows={4}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
               required
               autoFocus
             />

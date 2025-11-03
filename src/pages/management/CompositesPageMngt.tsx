@@ -1,6 +1,5 @@
-//pages/management/CompositesPageMngt.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useManagementStore, Composite, Question } from '../../stores/managementStore';
+import { useManagementStore, Composite, Question } from '../../stores/managementStore'; 
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 
@@ -8,18 +7,20 @@ import Modal from '../../components/common/Modal';
 interface QuestionSelectorProps {
   allQuestions: Question[];
   selectedCategory: 'room' | 'f&b';
-  defaultChecked?: string[];
+  checkedIds: string[]; // Use the live state
+  onCheckboxChange: (questionId: string, isChecked: boolean) => void;
 }
 
-
-
-  
-const QuestionSelector: React.FC<QuestionSelectorProps> = ({ allQuestions, selectedCategory, defaultChecked = [] }) => {
+const QuestionSelector: React.FC<QuestionSelectorProps> = ({
+  allQuestions,
+  selectedCategory,
+  checkedIds,
+  onCheckboxChange
+}) => {
   const filteredQuestions = useMemo(() => {
-    // Sort by order before displaying
     return allQuestions
       .filter(q => q.category === selectedCategory)
-      .sort((a, b) => a.order - b.order);
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [allQuestions, selectedCategory]);
 
   if (filteredQuestions.length === 0) {
@@ -33,12 +34,13 @@ const QuestionSelector: React.FC<QuestionSelectorProps> = ({ allQuestions, selec
           <input
             type="checkbox"
             id={`question-${q._id}`}
-            name={`question-${q._id}`} // Use name to group for form submission
+            name={`question-${q._id}`}
             value={q._id}
-            defaultChecked={defaultChecked.includes(q._id)}
+            checked={checkedIds.includes(q._id)} 
+            onChange={(e) => onCheckboxChange(q._id, e.target.checked)} 
             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 "
           />
-          <label htmlFor={`question-${q._id}`} className="ml-2 block text-sm text-gray-900">{q.text} (Order: {q.order})</label>
+          <label htmlFor={`question-${q._id}`} className="ml-2 block text-sm text-gray-900">{q.text} (Order: {q.order || 0})</label>
         </div>
       ))}
     </div>
@@ -58,8 +60,6 @@ const CompositeList: React.FC<CompositeListProps> = ({ composites, onEdit, onDel
   if (composites.length === 0) {
     return <p className="text-gray-500 md:col-span-2">{emptyMessage}</p>;
   }
-  
-  // Sort composites by order before rendering
   const sortedComposites = [...composites].sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return (
@@ -81,7 +81,6 @@ const CompositeList: React.FC<CompositeListProps> = ({ composites, onEdit, onDel
   );
 };
 
-
 // --- Main Page Component ---
 const CompositesPageMngt: React.FC = () => {
   const {
@@ -99,6 +98,7 @@ const CompositesPageMngt: React.FC = () => {
   const [editingComposite, setEditingComposite] = useState<Composite | null>(null);
   const [modalCategory, setModalCategory] = useState<'room' | 'f&b'>('room');
   const [activeTab, setActiveTab] = useState<'room' | 'f&b'>('room');
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
 
   const { roomComposites, fbComposites } = useMemo(() => {
     return {
@@ -115,12 +115,17 @@ const CompositesPageMngt: React.FC = () => {
   const openCreateModal = () => {
     setEditingComposite(null);
     setModalCategory(activeTab);
+    setSelectedQuestionIds([]);
     setIsModalOpen(true);
   };
 
   const openEditModal = (composite: Composite) => {
     setEditingComposite(composite);
     setModalCategory(composite.category);
+    // normalize to string ids in case questions are populated objects
+    setSelectedQuestionIds(
+      (composite.questions || []).map((q: any) => (typeof q === 'string' ? q : q._id))
+    );
     setIsModalOpen(true);
   };
 
@@ -133,28 +138,36 @@ const CompositesPageMngt: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingComposite(null);
+    setSelectedQuestionIds([]);
+  };
+
+  // This handler updates the state
+  const handleCheckboxChange = (questionId: string, isChecked: boolean) => {
+    setSelectedQuestionIds(prevIds => {
+      if (isChecked) {
+        // Add ID if it's not already there
+        return Array.from(new Set([...prevIds, questionId]));
+      } else {
+        // Remove ID
+        return prevIds.filter(id => id !== questionId);
+      }
+    });
   };
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
-    const category = formData.get('category') as 'room' | 'f&b';
-    const order = Number(formData.get('order') || 0); // Get order
-
-    const selectedQuestionIds: string[] = [];
-    // Loop over checkboxes by name to get selected values
-    event.currentTarget.querySelectorAll('input[name^="question-"]:checked').forEach(input => {
-        selectedQuestionIds.push((input as HTMLInputElement).value);
-    });
+    // Use state value — disabled select won't be part of formData when editing
+    const category = modalCategory; // <- important fix
+    const order = Number(formData.get('order') || 0);
 
     if (!name || !category || selectedQuestionIds.length === 0) {
-        console.error('Validation failed: Name, category, and questions required.');
-        // Add user-friendly feedback (e.g., toast)
-        return;
+      console.error('Validation failed: Name, category, and at least one question required. Current selected IDs:', selectedQuestionIds);
+      alert('Validation failed: Name, category, and at least one question required.');
+      return;
     }
-    
-    // Include order in the payload
+
     const payload = { name, questions: selectedQuestionIds, category, order };
 
     if (editingComposite) {
@@ -235,7 +248,7 @@ const CompositesPageMngt: React.FC = () => {
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Name Input */}
+            {/* Name, Order, Category inputs */}
             <div className="mb-4 col-span-1">
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">Composite Name</label>
               <input
@@ -245,8 +258,6 @@ const CompositesPageMngt: React.FC = () => {
                 required autoFocus
               />
             </div>
-
-            {/* Order Input */}
             <div className="mb-4 col-span-1">
                 <label htmlFor="order" className="block text-sm font-medium text-gray-700">Order</label>
                 <input
@@ -258,21 +269,28 @@ const CompositesPageMngt: React.FC = () => {
                   required
                 />
             </div>
-
-            {/* Category Select */}
             <div className="mb-4 col-span-2">
               <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
               <select
                 name="category" id="category"
                 value={modalCategory}
-                onChange={(e) => setModalCategory(e.target.value as 'room' | 'f&b')}
-                disabled={!!editingComposite} // Disable changing category on edit
+                onChange={(e) => {
+                    // When creating, changing category should reset selected questions
+                    if (!editingComposite) {
+                        setSelectedQuestionIds([]);
+                    }
+                    setModalCategory(e.target.value as 'room' | 'f&b');
+                }}
+                disabled={!!editingComposite}
                 className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-gray-50 disabled:bg-gray-200"
               >
                 <option value="room">Room</option>
                 <option value="f&b">F&B</option>
               </select>
               {editingComposite && <p className="text-xs text-gray-500 mt-1">Category cannot be changed after creation.</p>}
+
+              {/* Hidden input ensures form data contains category as a fallback */}
+              <input type="hidden" name="category" value={modalCategory} />
             </div>
           </div>
 
@@ -280,9 +298,12 @@ const CompositesPageMngt: React.FC = () => {
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">Select Questions (from {modalCategory.toUpperCase()} category)</label>
             <QuestionSelector
+              // Add key so react remounts selector when switching between editing different composites or category
+              key={`${editingComposite ? editingComposite._id : 'new'}-${modalCategory}`}
               allQuestions={questions}
               selectedCategory={modalCategory}
-              defaultChecked={editingComposite?.questions}
+              checkedIds={selectedQuestionIds}
+              onCheckboxChange={handleCheckboxChange}
             />
           </div>
 

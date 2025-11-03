@@ -59,8 +59,8 @@ interface ManagementState {
 
   // Composite Actions
   fetchComposites: () => Promise<void>;
-  createComposite: (data: { name: string, questions: string[], category: 'room' | 'f&b' }) => Promise<void>; // Updated signature
-  updateComposite: (id: string, data: { name: string, questions: string[], category: 'room' | 'f&b' }) => Promise<void>; // Updated signature
+createComposite: (data: { name: string, questions: string[], category: 'room' | 'f&b', order: number }) => Promise<void>;
+updateComposite: (id: string, data: { name: string, questions: string[], category: 'room' | 'f&b', order: number }) => Promise<void>;
   deleteComposite: (id: string) => Promise<void>;
 
   // Question Actions
