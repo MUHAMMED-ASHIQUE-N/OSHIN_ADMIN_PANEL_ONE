@@ -5,6 +5,7 @@ import { useReviewStore } from "../../stores/reviewStore";
 import { useNavigate, useParams } from "react-router-dom";
 import logo from "../../assets/logo/logo_oshin.svg";
 import toast from 'react-hot-toast';
+import { useAuthStore } from "../../stores/authStore";
 
 // Reusable components (No changes needed here)
 const DottedLineInput = ({ label, value, onChange }: { label: string; value: string; onChange: (val: string) => void }) => (
@@ -68,6 +69,8 @@ const ReviewPage: React.FC = () => {
         resetReview,
         error // Get submit error from store
     } = useReviewStore();
+  const logout = useAuthStore((state) => state.logout); // Get the logout function
+
 
     useEffect(() => {
         resetReview(); // Reset state on load/category change
@@ -164,26 +167,26 @@ const ReviewPage: React.FC = () => {
 
     const [showButton, setShowButton] = useState(false);
 
-    useEffect(() => {
-        let timer: number;
-        if (page === "thankyou") {
-            // Hide button initially
-            setShowButton(false);
+   useEffect(() => {
+        let timer: number;
+        if (page === "thankyou") {
+            // Hide button initially
+            setShowButton(false);
 
-            // Set a timer to show the button after 1 minute
-            timer = setTimeout(() => {
-                setShowButton(true);
-            }, 60000); // 60,000 milliseconds
-        }
+            // Set a timer to show the button AND LOGOUT after 1 minute
+            timer = setTimeout(() => {
+                setShowButton(true);
+                logout(); // <-- 1. ADD THIS LINE TO CALL LOGOUT
+            }, 60000); // 60,000 milliseconds
+        }
 
-        // Cleanup timer if the component unmounts
-        return () => {
-            if (timer) {
-                clearTimeout(timer);
-            }
-        };
-    }, [page]); // Rerun this effect if the 'page' changes
-
+        // Cleanup timer if the component unmounts
+        return () => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+        };
+    }, [page, logout]); // <-- 2. ADD 'logout' TO THE DEPENDENCY ARRAY
     // --- Your existing logic ---
 
 

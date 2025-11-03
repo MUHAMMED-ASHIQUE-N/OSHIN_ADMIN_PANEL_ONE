@@ -1,32 +1,26 @@
-// src/stores/authStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-// Define the shape of the user object
+// ✅ CHANGED: Define the user object with the new roles
 export interface IUser {
   _id: string;
   fullName: string;
   username: string;
-  role: 'admin' | 'staff' | 'viewer';
+  role: 'admin' | 'staff' | 'viewer' | 'staff_room' | 'staff_f&b';
 }
 
-// Define the shape of the store's state and actions
 interface AuthState {
   token: string | null;
   user: IUser | null;
   isLoading: boolean;
   error: string | null;
-  // This action will be called by our new central login page
   setAuth: (token: string, user: IUser) => void;
   logout: () => void;
-  // We keep the login action for flexibility, but our page will use setAuth
-  // Notice the role check is removed.
   login: (username: string, password: string) => Promise<IUser | null>;
 }
 
-// Create the store
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -53,7 +47,6 @@ export const useAuthStore = create<AuthState>()(
 
           const { token, data } = response.data;
           
-          // Just set the auth data and return the user
           set({ token, user: data.user, isLoading: false });
           return data.user;
 
@@ -67,7 +60,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage', // Name for the localStorage item
+      name: 'auth-storage',
     }
   )
 );

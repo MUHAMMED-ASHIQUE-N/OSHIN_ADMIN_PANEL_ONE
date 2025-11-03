@@ -1,10 +1,10 @@
-// src/components/auth/ProtectedRoute.tsx
 import React from 'react';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore, IUser } from '../../stores/authStore'; // Import the IUser interface
 import { Navigate, Outlet } from 'react-router-dom';
 
 interface ProtectedRouteProps {
-  allowedRoles: ('admin' | 'staff' | 'viewer')[];
+  // ✅ Update the allowedRoles array to include all possible roles
+  allowedRoles: IUser['role'][];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
@@ -16,8 +16,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   }
 
   if (!allowedRoles.includes(user.role)) {
-    // Logged in, but wrong role
-    // You could redirect to an "Unauthorized" page or back to login
+    // Logged in, but wrong role. Redirect to login.
     return <Navigate to="/login" replace />;
   }
 

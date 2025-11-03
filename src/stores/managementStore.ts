@@ -29,10 +29,10 @@ export interface ManagementUser {
   fullName: string;
   username: string;
   isActive: boolean;
-  role: 'admin' | 'staff' | 'viewer';
+  role: "admin" | "staff" | "viewer" | "staff_room" | "staff_f&b";
 }
 
-type UserRole = 'admin' | 'staff' | 'viewer';
+type UserRole = "admin" | "staff" | "viewer" | "staff_room" | "staff_f&b"; // 👈 NEW
 
 type CreateUserPayload = {
   fullName: string;

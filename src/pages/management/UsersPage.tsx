@@ -1,30 +1,32 @@
-// src/pages/management/UsersPage.tsx
-
-
 import React, { useState, useEffect } from 'react';
+// ✅ Import the ManagementUser type which should include the new roles
 import { useManagementStore, ManagementUser } from '../../stores/managementStore';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 import { useAuthStore } from '../../stores/authStore';
+import { IUser } from '../../stores/authStore'; // ✅ Import IUser to get the full role type
+
+// Define the full role type locally for clarity
+type UserRole = IUser['role'];
 
 const UsersPage: React.FC = () => {
   const {
     users,
     isLoading,
-    fetchUsers,
-    createUser,
-    updateUser,
-    deleteUser,
+    fetchUsers, // Renamed from fetchStaff
+    createUser, // Renamed from createStaff
+    updateUser, // Renamed from updateStaff
+    deleteUser, // Renamed from deleteStaff
   } = useManagementStore();
   
-  // Get the ID of the currently logged-in admin
   const currentAdminId = useAuthStore((state) => state.user?._id);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // ✅ Use the ManagementUser type which should be imported from your store
   const [editingUser, setEditingUser] = useState<ManagementUser | null>(null);
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(); // Call fetchUsers
   }, [fetchUsers]);
 
   const openCreateModal = () => {
@@ -44,7 +46,6 @@ const UsersPage: React.FC = () => {
     }
     const action = user.isActive ? 'deactivate' : 'reactivate';
     if (window.confirm(`Are you sure you want to ${action} ${user.fullName}?`)) {
-      // This endpoint toggles 'isActive' status
       deleteUser(user._id);
     }
   };
@@ -60,7 +61,8 @@ const UsersPage: React.FC = () => {
     const fullName = formData.get('fullName') as string;
     const username = formData.get('username') as string;
     const password = formData.get('password') as string;
-    const role = formData.get('role') as 'admin' | 'staff' | 'viewer';
+    // ✅ Cast to the full UserRole type
+    const role = formData.get('role') as UserRole; 
 
     if (!fullName || !username || !role) {
       alert('Full Name, Username, and Role are required.');
@@ -102,12 +104,16 @@ const UsersPage: React.FC = () => {
 
       <div className="bg-white p-4 rounded-lg shadow-md">
         <ul className="divide-y divide-gray-200">
+          {/* ✅ Use 'users' array from store */}
           {users.map(user => (
             <li key={user._id} className="flex items-center justify-between p-3">
               <div>
                 <span className="font-medium text-gray-800">{user.fullName}</span>
                 <span className="text-sm text-gray-500 ml-2">(@{user.username})</span>
-                <span className="ml-2 text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full capitalize">{user.role}</span>
+                {/* ✅ Role tag is now dynamic and capitalizes all roles */}
+                <span className="ml-2 text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full capitalize">
+                  {user.role.replace('_', ' ')} {/* Replaces 'staff_room' with 'staff room' */}
+                </span>
               </div>
               <div className="flex items-center gap-4">
                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -155,17 +161,18 @@ const UsersPage: React.FC = () => {
             />
           </div>
           
-          {/* Role Select */}
+          {/* ✅ START: Updated Role Select */}
           <div>
             <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
             <select
               name="role" id="role"
               defaultValue={editingUser?.role || 'staff'}
               className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              // Prevent admin from demoting themselves
               disabled={editingUser?._id === currentAdminId && editingUser?.role === 'admin'}
             >
-              <option value="staff">Staff</option>
+              <option value="staff">Staff (Generic)</option>
+              <option value="staff_room">Staff (Room)</option>
+              <option value="staff_f&b">Staff (F&B)</option>
               <option value="viewer">Associate (Viewer)</option>
               <option value="admin">Admin</option>
             </select>
@@ -173,8 +180,8 @@ const UsersPage: React.FC = () => {
               <p className="text-xs text-gray-500 mt-1">You cannot change your own role.</p>
             )}
           </div>
+          {/* ✅ END: Updated Role Select */}
           
-          {/* Only show the password field when creating a new user */}
           {!editingUser && (
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>

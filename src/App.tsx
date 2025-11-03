@@ -89,7 +89,9 @@ function App() {
           </Route>
 
           {/* Staff Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['staff']} />}>
+           {/* ✅ CHANGED: Staff Routes */}
+          {/* Allow all staff types to access these routes. The login logic will handle redirection. */}
+          <Route element={<ProtectedRoute allowedRoles={['staff', 'staff_room', 'staff_f&b']} />}>
             <Route path="/review/select" element={<SelectCategoryPage />} />
             <Route path="/review/:category" element={<ReviewPage />} />
             <Route path="/review" element={<Navigate to="/review/select" replace />} />
