@@ -9,7 +9,7 @@ const GenerateLinkPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { generatedToken, isLoading, error, generateToken, clearToken } = useTokenStore();
-  
+  //window
   useEffect(() => {
     clearToken();
   }, [clearToken]);
@@ -21,7 +21,7 @@ const GenerateLinkPage: React.FC = () => {
 
   const getFullLink = () => {
     if (!generatedToken) return '';
-    return `${window.location.origin}/public/review/${generatedToken}`;
+    return `${window.location.origin}/public/review/${encodeURIComponent(generatedToken)}`;
   };
 
   const handleCopyToClipboard = () => {

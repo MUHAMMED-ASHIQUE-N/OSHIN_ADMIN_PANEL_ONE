@@ -160,12 +160,12 @@ const handleSubmit = async () => {
         return undefined;
     };
 
-    const payload: ReviewPayload = {
-        category: publicCategory,
-        answers: answersPayload,
-        description: description.trim(),
-        guestInfo: getGuestInfo(), // ✅ USE THE NEW DYNAMIC OBJECT
-    };
+const payload: ReviewPayload = {
+    category: publicCategory,
+    answers: answersPayload,
+    description: description.trim(),
+    guestInfo: getGuestInfo(), // ✅ Correctly named 'guestInfo'
+};
 
     const success = await submitPublicReview(token, payload);
     if (success) {
