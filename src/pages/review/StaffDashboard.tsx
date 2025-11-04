@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../../assets/logo/logo.png'; // Adjust path
-import { useAuthStore, } from '../../stores/authStore';
+import logo from '../../assets/logo/logo.png';
+import { useAuthStore } from '../../stores/authStore';
 import { LogOut, Link, Edit } from 'lucide-react';
 
 const StaffDashboard: React.FC = () => {
@@ -14,14 +14,16 @@ const StaffDashboard: React.FC = () => {
     navigate('/login');
   };
 
+  // ✅ UPDATED: Handle navigation for all staff roles
   const handleNavigate = () => {
-    // Navigate to the correct page based on specific role
     if (role === 'staff_room') {
       navigate('/review/room');
     } else if (role === 'staff_f&b') {
       navigate('/review/f&b');
+    } else if (role === 'staff_cfc') {
+      navigate('/review/cfc'); // <-- Go to cfc review page
     } else {
-      // Generic 'staff' role goes to category selection
+      // Generic 'staff' role
       navigate('/review/select');
     }
   };

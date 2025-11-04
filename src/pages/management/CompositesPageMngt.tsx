@@ -1,12 +1,15 @@
+// frontend/pages/CompositesPageMngt.tsx
+
 import React, { useState, useEffect, useMemo } from 'react';
-import { useManagementStore, Composite, Question } from '../../stores/managementStore'; 
-import { Edit, Trash2, PlusCircle } from 'lucide-react';
+import { useManagementStore, Composite, Question } from '../../stores/managementStore';
+import { Edit, Trash2, PlusCircle, Eye, EyeOff } from 'lucide-react'; // ✅ Added Eye, EyeOff
 import Modal from '../../components/common/Modal';
+import { clsx } from 'clsx'; // ✅ Added clsx
 
 // --- Category-Filtered Question List Component ---
 interface QuestionSelectorProps {
   allQuestions: Question[];
-  selectedCategory: 'room' | 'f&b';
+  selectedCategory: 'room' | 'f&b' | 'cfc';
   checkedIds: string[]; // Use the live state
   onCheckboxChange: (questionId: string, isChecked: boolean) => void;
 }
@@ -18,13 +21,14 @@ const QuestionSelector: React.FC<QuestionSelectorProps> = ({
   onCheckboxChange
 }) => {
   const filteredQuestions = useMemo(() => {
+    // Also filter out inactive questions from the selector
     return allQuestions
-      .filter(q => q.category === selectedCategory)
+      .filter(q => q.category === selectedCategory && q.isActive) 
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [allQuestions, selectedCategory]);
 
   if (filteredQuestions.length === 0) {
-    return <p className="text-sm text-gray-500 text-center p-4">No {selectedCategory.toUpperCase()} questions found. Please create some first.</p>;
+    return <p className="text-sm text-gray-500 text-center p-4">No *active* {selectedCategory.toUpperCase()} questions found. Please create or activate some first.</p>;
   }
 
   return (
@@ -36,8 +40,8 @@ const QuestionSelector: React.FC<QuestionSelectorProps> = ({
             id={`question-${q._id}`}
             name={`question-${q._id}`}
             value={q._id}
-            checked={checkedIds.includes(q._id)} 
-            onChange={(e) => onCheckboxChange(q._id, e.target.checked)} 
+            checked={checkedIds.includes(q._id)}
+            onChange={(e) => onCheckboxChange(q._id, e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 "
           />
           <label htmlFor={`question-${q._id}`} className="ml-2 block text-sm text-gray-900">{q.text} (Order: {q.order || 0})</label>
@@ -52,11 +56,12 @@ interface CompositeListProps {
   composites: Composite[];
   onEdit: (composite: Composite) => void;
   onDelete: (composite: Composite) => void;
+  onToggleActive: (composite: Composite) => void; // ✅ ADDED
   itemStyle: string;
   emptyMessage: string;
 }
 
-const CompositeList: React.FC<CompositeListProps> = ({ composites, onEdit, onDelete, itemStyle, emptyMessage }) => {
+const CompositeList: React.FC<CompositeListProps> = ({ composites, onEdit, onDelete, onToggleActive, itemStyle, emptyMessage }) => {
   if (composites.length === 0) {
     return <p className="text-gray-500 md:col-span-2">{emptyMessage}</p>;
   }
@@ -65,9 +70,22 @@ const CompositeList: React.FC<CompositeListProps> = ({ composites, onEdit, onDel
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {sortedComposites.map(comp => (
-        <div key={comp._id} className={itemStyle}>
-          <span className="pr-12">(Order: {comp.order || 0}) {comp.name}</span>
+        <div key={comp._id} className={clsx(
+          itemStyle,
+          !comp.isActive && "bg-gray-100 opacity-70 hover:bg-gray-200" // ✅ Style for inactive
+        )}>
+          {/* ✅ ADD Inactive Badge */}
+          {!comp.isActive && <span className="absolute top-2 left-2 text-xs bg-red-200 text-red-700 px-2 py-0.5 rounded-full">INACTIVE</span>}
+          <span className="pr-20">(Order: {comp.order || 0}) {comp.name}</span>
           <div className="absolute top-1/2 right-3 -translate-y-1/2 flex items-center gap-2">
+            {/* ✅ ADD Toggle Button */}
+            <button
+              onClick={() => onToggleActive(comp)}
+              className={clsx("p-1", comp.isActive ? "text-gray-400 hover:text-green-600" : "text-red-400 hover:text-red-600")}
+              title={comp.isActive ? "Deactivate" : "Activate"}
+            >
+              {comp.isActive ? <Eye size={18} /> : <EyeOff size={18} />}
+            </button>
             <button onClick={() => onEdit(comp)} className="p-1 text-primary/70 hover:text-primary" title="Edit">
               <Edit size={18} />
             </button>
@@ -92,18 +110,20 @@ const CompositesPageMngt: React.FC = () => {
     createComposite,
     updateComposite,
     deleteComposite,
+    toggleCompositeActive, // ✅ ADDED
   } = useManagementStore();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingComposite, setEditingComposite] = useState<Composite | null>(null);
-  const [modalCategory, setModalCategory] = useState<'room' | 'f&b'>('room');
-  const [activeTab, setActiveTab] = useState<'room' | 'f&b'>('room');
+  const [modalCategory, setModalCategory] = useState<'room' | 'f&b' | 'cfc'>('room');
+  const [activeTab, setActiveTab] = useState<'room' | 'f&b' | 'cfc'>('room');
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
 
-  const { roomComposites, fbComposites } = useMemo(() => {
+  const { roomComposites, fbComposites, cfcComposites } = useMemo(() => {
     return {
       roomComposites: composites.filter(c => c.category === 'room'),
       fbComposites: composites.filter(c => c.category === 'f&b'),
+      cfcComposites: composites.filter(c => c.category === 'cfc'),
     };
   }, [composites]);
 
@@ -122,7 +142,6 @@ const CompositesPageMngt: React.FC = () => {
   const openEditModal = (composite: Composite) => {
     setEditingComposite(composite);
     setModalCategory(composite.category);
-    // normalize to string ids in case questions are populated objects
     setSelectedQuestionIds(
       (composite.questions || []).map((q: any) => (typeof q === 'string' ? q : q._id))
     );
@@ -141,14 +160,16 @@ const CompositesPageMngt: React.FC = () => {
     setSelectedQuestionIds([]);
   };
 
-  // This handler updates the state
+  // ✅ ADDED Handler
+  const handleToggleActive = (composite: Composite) => {
+    toggleCompositeActive(composite);
+  };
+
   const handleCheckboxChange = (questionId: string, isChecked: boolean) => {
     setSelectedQuestionIds(prevIds => {
       if (isChecked) {
-        // Add ID if it's not already there
         return Array.from(new Set([...prevIds, questionId]));
       } else {
-        // Remove ID
         return prevIds.filter(id => id !== questionId);
       }
     });
@@ -158,9 +179,9 @@ const CompositesPageMngt: React.FC = () => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
-    // Use state value — disabled select won't be part of formData when editing
-    const category = modalCategory; // <- important fix
+    const category = modalCategory;
     const order = Number(formData.get('order') || 0);
+    const isActive = formData.get('isActive') === 'on'; // ✅ ADDED
 
     if (!name || !category || selectedQuestionIds.length === 0) {
       console.error('Validation failed: Name, category, and at least one question required. Current selected IDs:', selectedQuestionIds);
@@ -168,7 +189,7 @@ const CompositesPageMngt: React.FC = () => {
       return;
     }
 
-    const payload = { name, questions: selectedQuestionIds, category, order };
+    const payload = { name, questions: selectedQuestionIds, category, order, isActive }; // ✅ ADDED isActive
 
     if (editingComposite) {
       updateComposite(editingComposite._id, payload);
@@ -179,6 +200,15 @@ const CompositesPageMngt: React.FC = () => {
   };
 
   const compositeItemStyle = "relative bg-secondary/75 p-5 rounded-lg text-center font-semibold uppercase tracking-wider cursor-pointer hover:bg-secondary/50 transition-colors";
+
+  // ✅ Helper for Tab styling
+  const getTabClassName = (tabName: 'room' | 'f&b' | 'cfc') => {
+    return `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
+      activeTab === tabName
+        ? 'border-primary text-primary'
+        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+    }`;
+  };
 
   return (
     <div className="border-[3px] border-primary rounded-[20px] p-6 bg-white shadow-sm">
@@ -195,23 +225,21 @@ const CompositesPageMngt: React.FC = () => {
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           <button
             onClick={() => setActiveTab('room')}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
-              activeTab === 'room'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={getTabClassName('room')} // ✅ Cleaned up
           >
             Room
           </button>
           <button
             onClick={() => setActiveTab('f&b')}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
-              activeTab === 'f&b'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={getTabClassName('f&b')} // ✅ Cleaned up
           >
             F&B
+          </button>
+          <button
+            onClick={() => setActiveTab('cfc')}
+            className={getTabClassName('cfc')} // ✅ Cleaned up
+          >
+            CFC
           </button>
         </nav>
       </div>
@@ -219,22 +247,33 @@ const CompositesPageMngt: React.FC = () => {
       {/* --- Tab Content --- */}
       <div>
         {isLoading && composites.length === 0 ? (
-           <p className="text-center text-gray-500 py-10">Loading composites...</p>
+          <p className="text-center text-gray-500 py-10">Loading composites...</p>
         ) : activeTab === 'room' ? (
           <CompositeList
             composites={roomComposites}
             onEdit={openEditModal}
             onDelete={openDeleteModal}
+            onToggleActive={handleToggleActive} // ✅ ADDED
             itemStyle={compositeItemStyle}
             emptyMessage="No room composites found."
           />
-        ) : (
+        ) : activeTab === 'f&b' ? (
           <CompositeList
             composites={fbComposites}
             onEdit={openEditModal}
             onDelete={openDeleteModal}
+            onToggleActive={handleToggleActive} // ✅ ADDED
             itemStyle={compositeItemStyle}
             emptyMessage="No F&B composites found."
+          />
+        ) : (
+          <CompositeList
+            composites={cfcComposites}
+            onEdit={openEditModal}
+            onDelete={openDeleteModal}
+            onToggleActive={handleToggleActive} // ✅ ADDED
+            itemStyle={compositeItemStyle}
+            emptyMessage="No CFC composites found."
           />
         )}
       </div>
@@ -259,15 +298,15 @@ const CompositesPageMngt: React.FC = () => {
               />
             </div>
             <div className="mb-4 col-span-1">
-                <label htmlFor="order" className="block text-sm font-medium text-gray-700">Order</label>
-                <input
-                  type="number"
-                  name="order"
-                  id="order"
-                  defaultValue={editingComposite?.order || 0}
-                  className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  required
-                />
+              <label htmlFor="order" className="block text-sm font-medium text-gray-700">Order</label>
+              <input
+                type="number"
+                name="order"
+                id="order"
+                defaultValue={editingComposite?.order || 0}
+                className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                required
+              />
             </div>
             <div className="mb-4 col-span-2">
               <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
@@ -275,22 +314,33 @@ const CompositesPageMngt: React.FC = () => {
                 name="category" id="category"
                 value={modalCategory}
                 onChange={(e) => {
-                    // When creating, changing category should reset selected questions
-                    if (!editingComposite) {
-                        setSelectedQuestionIds([]);
-                    }
-                    setModalCategory(e.target.value as 'room' | 'f&b');
+                  const newCat = e.target.value as 'room' | 'f&b' | 'cfc';
+                  if (!editingComposite) { setSelectedQuestionIds([]); }
+                  setModalCategory(newCat);
                 }}
                 disabled={!!editingComposite}
-                className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-gray-50 disabled:bg-gray-200"
+                className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white disabled:bg-gray-100" // ✅ Cleaned up
               >
                 <option value="room">Room</option>
                 <option value="f&b">F&B</option>
+                <option value="cfc">CFC</option>
               </select>
               {editingComposite && <p className="text-xs text-gray-500 mt-1">Category cannot be changed after creation.</p>}
-
-              {/* Hidden input ensures form data contains category as a fallback */}
               <input type="hidden" name="category" value={modalCategory} />
+            </div>
+
+            {/* ✅ ADD IsActive Toggle */}
+            <div className="mb-4 col-span-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  name="isActive"
+                  id="isActive"
+                  defaultChecked={editingComposite ? editingComposite.isActive : true}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                Active (Visible to users)
+              </label>
             </div>
           </div>
 
@@ -298,7 +348,6 @@ const CompositesPageMngt: React.FC = () => {
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">Select Questions (from {modalCategory.toUpperCase()} category)</label>
             <QuestionSelector
-              // Add key so react remounts selector when switching between editing different composites or category
               key={`${editingComposite ? editingComposite._id : 'new'}-${modalCategory}`}
               allQuestions={questions}
               selectedCategory={modalCategory}

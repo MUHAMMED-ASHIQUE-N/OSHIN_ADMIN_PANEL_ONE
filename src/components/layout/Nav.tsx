@@ -5,7 +5,7 @@ import { FaUserCircle } from "react-icons/fa";
 import { useAuthStore } from "../../stores/authStore";
 
 // 1. Define the type for the props (toggleSidebar and isMobile removed)
-type Category = 'room' | 'f&b';
+type Category = 'room' | 'f&b' | 'cfc';
 
 interface NavProps {
   category: Category;
@@ -25,26 +25,35 @@ function Nav({ category, setCategory }: NavProps) {
       </div>
 
       {/* 4. Use the 'category' and 'setCategory' props for the toggle buttons */}
-      {(user?.role === 'admin' || user?.role === 'viewer') && (
-        <div className="flex items-center gap-2 bg-gray-200 p-1 rounded-lg">
-          <button
-            onClick={() => setCategory('room')}
-            className={`px-4 py-1 rounded-md text-sm font-medium transition-colors ${
-              category === 'room' ? 'bg-primary text-white shadow' : 'text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Rooms
-          </button>
-          <button
-            onClick={() => setCategory('f&b')}
-            className={`px-4 py-1 rounded-md text-sm font-medium transition-colors ${
-              category === 'f&b' ? 'bg-primary text-white shadow' : 'text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            F&B
-          </button>
-        </div>
-      )}
+     {(user?.role === 'admin' || user?.role === 'viewer') && (
+        <div className="flex items-center gap-2 bg-gray-200 p-1 rounded-lg">
+          <button
+            onClick={() => setCategory('room')}
+            className={`px-4 py-1 rounded-md text-sm font-medium transition-colors ${
+              category === 'room' ? 'bg-primary text-white shadow' : 'text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Rooms
+          </button>
+          <button
+            onClick={() => setCategory('f&b')}
+            className={`px-4 py-1 rounded-md text-sm font-medium transition-colors ${
+              category === 'f&b' ? 'bg-primary text-white shadow' : 'text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            F&B
+          </button>
+          {/* ✅ ADDED CFC Button */}
+          <button
+            onClick={() => setCategory('cfc')}
+            className={`px-4 py-1 rounded-md text-sm font-medium transition-colors ${
+              category === 'cfc' ? 'bg-primary text-white shadow' : 'text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            CFC
+          </button>
+        </div>
+      )}
 
       {/* User Info - no changes here */}
       <div className="flex items-center gap-4">

@@ -1,5 +1,4 @@
-//pages/comparePage.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useComparisonStore } from "../stores/comparisonStore";
 import { AnalyticsItemType } from "../stores/analyticsStore"; // Reuse type
@@ -12,100 +11,144 @@ import { useFilterStore } from "../stores/filterStore";
 import { useAuthStore } from "../stores/authStore";
 import { ArrowLeft } from "lucide-react"; // For back button
 
+// --- Helper to format date as YYYY-MM-DD ---
+// const getISODate = (offsetDays: number = 0): string => {
+//   const date = new Date();
+//   date.setDate(date.getDate() + offsetDays);
+//   return date.toISOString().split("T")[0];
+// };
 
+// --- useResponsive Hook (copied from Layout.tsx) ---
+const useResponsive = () => {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+    return isMobile;
+};
 
 const ComparePage: React.FC = () => {
-  const { category } = useParams<{ category: "room" | "f&b" }>();
-  const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout); // Get logout function
+  const { category } = useParams<{ category: 'room' | 'f&b' | 'cfc' }>(); // ✅ Added 'cfc'
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
+  const isMobile = useResponsive();
 
-  // --- Local State ---
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile sidebar
-  const [sidebarMode, setSidebarMode] =
-    useState<AnalyticsItemType>("composite");
+  // --- Local State ---
+  const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
+  const [sidebarMode, setSidebarMode] =
+    useState<AnalyticsItemType>("composite");
 
-  // --- Global State ---
-  const setGlobalCategory = useFilterStore((state) => state.setCategory);
+  // --- Global State ---
+  const setGlobalCategory = useFilterStore((state) => state.setCategory);
   
-  // ✅ Get data *and* fetch functions from stores
-  const { composites, fetchComposites } = useCompositeStore();
-  const { questions, fetchQuestions } = useManagementStore();
+  const { composites, fetchComposites, isLoading: isLoadingComposites } = useCompositeStore();
+  const { questions, fetchQuestions, isLoading: isLoadingQuestions } = useManagementStore();
 
-  const {
-    selectedItem,
-    dateRangeA,
-    dateRangeB,
-    comparisonData,
-    isLoading,
-    error,
-    setSelectedItem,
-    setDateRangeA,
-    setDateRangeB,
-    fetchComparisonData,
-  } = useComparisonStore();
+  const {
+    selectedItem, dateRangeA, dateRangeB, comparisonData, isLoading, error,
+    setSelectedItem, setDateRangeA, setDateRangeB, fetchComparisonData, resetComparison // ✅ Get reset action
+  } = useComparisonStore();
 
-  // --- Effects ---
-  useEffect(() => {
-    if (category) {
-      setGlobalCategory(category);
-    } else {
-      navigate("/"); // Redirect home if no category
-    }
-  }, [category, setGlobalCategory, navigate]);
-
-  // ✅ OPTIMIZATION: Only fetch if data is not already in the store
-  useEffect(() => {
-    if (composites.length === 0) {
-      fetchComposites();
+  // --- Effects ---
+  // Set global category and reset comparison store on load/category change
+  useEffect(() => {
+    if (category) {
+      setGlobalCategory(category);
+      resetComparison(); // ✅ Reset store on category change
+    } else {
+      navigate("/"); // Redirect home if no category
     }
-    if (questions.length === 0) {
-      fetchQuestions();
-    }
-    // Only re-run if fetch functions change or lengths go from 0 to non-0
-  }, [fetchComposites, fetchQuestions, composites.length, questions.length]);
+  }, [category, setGlobalCategory, navigate, resetComparison]); // ✅ Add reset
 
-  // --- Handlers ---
-  const handleSelectItem = (
-    id: string,
-    name: string,
-    type: AnalyticsItemType
-  ) => {
-    setSelectedItem({ id, name, type });
-    if (window.innerWidth < 768) setIsSidebarOpen(false);
-  };
+  // Fetch lists for sidebar
+  useEffect(() => {
+    fetchComposites(true); // Force refetch
+    fetchQuestions(true); // Force refetch
+  }, [fetchComposites, fetchQuestions, category]); // ✅ Re-fetch when category changes
 
-  const handleRunComparison = () => {
-    if (!selectedItem || !category) return;
-    fetchComparisonData(category);
-  };
+  // Sync sidebar open state with isMobile
+  useEffect(() => {
+      if (!isMobile) setIsSidebarOpen(true);
+      else setIsSidebarOpen(false);
+  }, [isMobile]);
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  // --- Handlers ---
+  const handleSelectItem = (
+    id: string,
+    name: string,
+    type: AnalyticsItemType
+  ) => {
+    setSelectedItem({ id, name, type });
+    if (isMobile) setIsSidebarOpen(false);
+  };
 
-  // Create logout handler for this page
-  const handleLogout = () => {
-    logout();
-    navigate('/login'); // Redirect to login
-  };
+  const handleRunComparison = () => {
+    if (!selectedItem || !category) return;
+    fetchComparisonData(category);
+  };
 
-  // --- Local Date State ---
-  const [localDateA_start, setLocalDateA_start] = useState(dateRangeA.start);
-  const [localDateA_end, setLocalDateA_end] = useState(dateRangeA.end);
-  const [localDateB_start, setLocalDateB_start] = useState(dateRangeB.start);
-  const [localDateB_end, setLocalDateB_end] = useState(dateRangeB.end);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const handleApplyDateA = () =>
-    setDateRangeA({ start: localDateA_start, end: localDateA_end });
-  const handleApplyDateB = () =>
-    setDateRangeB({ start: localDateB_start, end: localDateB_end });
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // ✅ Handler for switching sidebar tabs (Comp/Ques)
+  const handleSetSidebarMode = useCallback((mode: AnalyticsItemType) => {
+      if (mode === sidebarMode) return;
+      setSidebarMode(mode);
+
+      let firstItem: { _id: string, name?: string, text?: string } | undefined;
+      let listToCheck: any[] = [];
+      
+      if (mode === 'composite') {
+          listToCheck = composites;
+      } else {
+          listToCheck = questions;
+      }
+
+      if ((mode === 'composite' && !isLoadingComposites) || (mode === 'question' && !isLoadingQuestions)) {
+          firstItem = listToCheck.find(item => item && item.category === category);
+
+          if (firstItem) {
+              const firstName = mode === 'question' ? firstItem.text : firstItem.name;
+              setSelectedItem({ id: firstItem._id, name: firstName || '', type: mode });
+          } else {
+              setSelectedItem(null); // Clear selection
+          }
+      } else {
+           setSelectedItem(null); // Clear selection
+      }
+  }, [sidebarMode, category, composites, questions, isLoadingComposites, isLoadingQuestions, setSelectedItem]);
+
+  // --- Local Date State ---
+  const [localDateA_start, setLocalDateA_start] = useState(dateRangeA.start);
+  const [localDateA_end, setLocalDateA_end] = useState(dateRangeA.end);
+  const [localDateB_start, setLocalDateB_start] = useState(dateRangeB.start);
+  const [localDateB_end, setLocalDateB_end] = useState(dateRangeB.end);
+  
+  // Sync local dates when store changes
+  useEffect(() => setLocalDateA_start(dateRangeA.start), [dateRangeA.start]);
+  useEffect(() => setLocalDateA_end(dateRangeA.end), [dateRangeA.end]);
+  useEffect(() => setLocalDateB_start(dateRangeB.start), [dateRangeB.start]);
+  useEffect(() => setLocalDateB_end(dateRangeB.end), [dateRangeB.end]);
+
+  const handleApplyDateA = () =>
+    setDateRangeA({ start: localDateA_start, end: localDateA_end });
+  const handleApplyDateB = () =>
+    setDateRangeB({ start: localDateB_start, end: localDateB_end });
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
+      {/* ✅ Pass all required props to Nav */}
       <Nav
         category={category!}
-        setCategory={setGlobalCategory}
-        
+        setCategory={setGlobalCategory} 
       />
-      <div className="h-10 w-full flex items-center px-10 bg-secondary/30">
+      <div className="h-10 w-full flex items-center px-10 bg-secondary/30 flex-shrink-0">
         <button
           onClick={() => navigate("/")}
           className="flex items-center justify-center gap-2 text-sm text-primary font-medium hover:underline hover:bg-primary hover:text-white py-1.5 px-2 rounded-md"
@@ -115,16 +158,15 @@ const ComparePage: React.FC = () => {
         </button>
       </div>
       <div className="flex flex-1 overflow-hidden pt-2">
-        {/* Re-use Sidebar */}
         <Sidebar
           isSidebarOpen={isSidebarOpen}
-          isMobile={window.innerWidth < 768}
+          isMobile={isMobile}
           toggleSidebar={toggleSidebar}
           sidebarMode={sidebarMode}
-          setSidebarMode={setSidebarMode}
+          setSidebarMode={handleSetSidebarMode} // ✅ Pass correct handler
           onSelectItem={handleSelectItem}
           currentItemId={selectedItem?.id}
-          onLogout={handleLogout} // ✅ 4. Pass the logout handler
+          onLogout={handleLogout}
         />
 
         {/* Main Content Area */}
@@ -154,21 +196,18 @@ const ComparePage: React.FC = () => {
                   </h3>
                   <div className="flex items-center gap-4">
                     <label className="flex-1 flex flex-col gap-1">
-                      <span className="text-sm font-medium text-gray-700">
-                        From:
-                      </span>
+                      <span className="text-sm font-medium text-gray-700">From:</span>
                       <input
                         type="date"
                         value={localDateA_start}
+                        max={localDateA_end}
                         onChange={(e) => setLocalDateA_start(e.target.value)}
                         onBlur={handleApplyDateA}
                         className="p-2 border border-gray-300 rounded-md"
                       />
                     </label>
                     <label className="flex-1 flex flex-col gap-1">
-                      <span className="text-sm font-medium text-gray-700">
-                        To:
-                      </span>
+                      <span className="text-sm font-medium text-gray-700">To:</span>
                       <input
                         type="date"
                         value={localDateA_end}
@@ -187,9 +226,7 @@ const ComparePage: React.FC = () => {
                   </h3>
                   <div className="flex items-center gap-4">
                     <label className="flex-1 flex flex-col gap-1">
-                      <span className="text-sm font-medium text-gray-700">
-                        From:
-                      </span>
+                      <span className="text-sm font-medium text-gray-700">From:</span>
                       <input
                         type="date"
                         value={localDateB_start}
@@ -200,9 +237,7 @@ const ComparePage: React.FC = () => {
                       />
                     </label>
                     <label className="flex-1 flex flex-col gap-1">
-                      <span className="text-sm font-medium text-gray-700">
-                        To:
-                      </span>
+                      <span className="text-sm font-medium text-gray-700">To:</span>
                       <input
                         type="date"
                         value={localDateB_end}

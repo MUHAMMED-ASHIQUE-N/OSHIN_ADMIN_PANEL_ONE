@@ -7,30 +7,37 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 // Interface for a single Q/A pair within a review
 interface YesNoAnswerPair {
-    questionText: string;
-    answer: boolean; // true for Yes, false for No
+    questionText: string;
+    answer: boolean; // true for Yes, false for No
+    answerText?: string; // ✅ ADDED: To show the text response
+}
+
+// ✅ ADDED: A new interface for the guestInfo object
+export interface GuestInfo {
+  name?: string;
+  phone?: string;
+  roomNumber?: string;
+  email?: string;
 }
 
 // Updated Interface: Represents a single Review containing Yes/No answers
 export interface YesNoReviewResponse {
-  _id: string; // Changed from reviewId to match backend _id
-  createdAt: string;
-  description?: string;
-  roomGuestInfo?: {
-    name?: string;
-    phone?: string;
-    roomNumber?: string;
-  };
-  yesNoAnswers: YesNoAnswerPair[]; // Array of question/answer pairs
+  _id: string;
+  createdAt: string;
+  description?: string;
+  guestInfo?: GuestInfo; // ✅ CHANGED: from roomGuestInfo to guestInfo
+  yesNoAnswers: YesNoAnswerPair[]; // Array of question/answer pairs
 }
 
-// State Interface remains similar but uses the new data structure
+// State Interface
 interface YesNoResponseState {
-  responses: YesNoReviewResponse[]; // Array of full reviews
-  isLoading: boolean;
-  error: string | null;
-  fetchResponses: (category: 'room' | 'f&b', startDate?: string, endDate?: string) => Promise<void>;
+  responses: YesNoReviewResponse[]; // Array of full reviews
+  isLoading: boolean;
+  error: string | null;
+  // ✅ CHANGED: Added 'cfc' to the category type
+  fetchResponses: (category: 'room' | 'f&b' | 'cfc', startDate?: string, endDate?: string) => Promise<void>;
 }
+
 
 export const useYesNoResponseStore = create<YesNoResponseState>((set) => ({
   responses: [],

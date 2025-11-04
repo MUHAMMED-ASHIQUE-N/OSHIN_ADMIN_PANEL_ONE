@@ -3,12 +3,12 @@ import { persist } from 'zustand/middleware';
 import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-// ✅ CHANGED: Define the user object with the new roles
+// ✅ ADDED 'staff_cfc'
 export interface IUser {
   _id: string;
   fullName: string;
   username: string;
-  role: 'admin' | 'staff' | 'viewer' | 'staff_room' | 'staff_f&b';
+  role: 'admin' | 'staff' | 'viewer' | 'staff_room' | 'staff_f&b' | 'staff_cfc';
 }
 
 interface AuthState {

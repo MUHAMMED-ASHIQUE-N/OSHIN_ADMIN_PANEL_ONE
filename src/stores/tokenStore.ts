@@ -1,26 +1,24 @@
 import { create } from 'zustand';
 import axios from 'axios';
-import { useAuthStore } from './authStore'; // Import auth store for token
-import { ReviewPayload } from './reviewStore'; // Reuse the payload type
+import { useAuthStore } from './authStore';
+import { ReviewPayload } from './reviewStore'; // This should now work
 
 const BASE_URL = import.meta.env.VITE_API_URL;
-
-// Re-define ReviewPayload if it's not exported from reviewStore
-// interface ReviewPayload { ... }
 
 interface TokenState {
   generatedToken: string | null;
   isLoading: boolean;
   error: string | null;
-
-      isSubmitting: boolean;
-  // For public validation
-  publicCategory: 'room' | 'f&b' | null;
+  isSubmitting: boolean; // Added this
+  
+  // ✅ ADDED 'cfc'
+  publicCategory: 'room' | 'f&b' | 'cfc' | null;
   isPublicLoading: boolean;
   publicError: string | null;
 
   generateToken: () => Promise<string | null>;
-  validateToken: (token: string) => Promise<'room' | 'f&b' | null>;
+  // ✅ ADDED 'cfc'
+  validateToken: (token: string) => Promise<'room' | 'f&b' | 'cfc' | null>;
   submitPublicReview: (token: string, payload: ReviewPayload) => Promise<boolean>;
   clearToken: () => void;
 }
@@ -34,9 +32,9 @@ export const useTokenStore = create<TokenState>((set) => ({
   generatedToken: null,
   isLoading: false,
   error: null,
-  isSubmitting: false,
+  isSubmitting: false, // Initialize
   publicCategory: null,
-  isPublicLoading: true, // Start as true on public page
+  isPublicLoading: true,
   publicError: null,
 
   clearToken: () => set({ generatedToken: null, error: null }),
@@ -44,10 +42,9 @@ export const useTokenStore = create<TokenState>((set) => ({
   generateToken: async () => {
     set({ isLoading: true, error: null, generatedToken: null });
     try {
-      // 1. Assumes this backend endpoint exists
       const response = await axios.post(
         `${BASE_URL}/token/generate`,
-        {}, // Send empty body, user is identified by auth token
+        {},
         getAuthHeader()
       );
       const token = response.data.token;
@@ -66,12 +63,12 @@ export const useTokenStore = create<TokenState>((set) => ({
   validateToken: async (token) => {
     set({ isPublicLoading: true, publicError: null, publicCategory: null });
     try {
-      // 2. Assumes this backend endpoint exists
       const response = await axios.get(
         `${BASE_URL}/public/validate/${token}`
       );
       const category = response.data.category;
-      if (category === 'room' || category === 'f&b') {
+      // ✅ ADDED 'cfc'
+      if (category === 'room' || category === 'f&b' || category === 'cfc') {
         set({ publicCategory: category, isPublicLoading: false });
         return category;
       }
@@ -86,10 +83,9 @@ export const useTokenStore = create<TokenState>((set) => ({
   submitPublicReview: async (token, payload) => {
     set({ isSubmitting: true, publicError: null });
     try {
-      // 3. Assumes this backend endpoint exists
       await axios.post(`${BASE_URL}/public/review`, {
         ...payload,
-        token: token, // Send the token along with the review
+        token: token,
       });
       set({ isSubmitting: false });
       return true;

@@ -1,18 +1,16 @@
-//pages/review/SelectCategoryPage.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-// Ensure this path is correct for your project structure
 import logo from '../../assets/logo/logo.png';
-import { Hotel, Utensils, LogOut } from 'lucide-react'; // Import LogOut icon
-import { useAuthStore } from '../../stores/authStore'; // Import the auth store
+import { Hotel, Utensils, LogOut, Coffee } from 'lucide-react'; // ✅ Import Coffee icon
+import { useAuthStore } from '../../stores/authStore';
 
 const SelectCategoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout); // Get the logout function
+  const logout = useAuthStore((state) => state.logout);
 
   const handleLogout = () => {
     logout();
-    navigate('/login'); // Redirect to login page after logout
+    navigate('/login');
   };
 
   return (
@@ -27,14 +25,14 @@ const SelectCategoryPage: React.FC = () => {
         <span>Logout</span>
       </button>
 
-      {/* Main Content */}
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 space-y-8 text-center">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8 space-y-8 text-center">
         <img src={logo} alt="Oshin Logo" className="w-24 mx-auto" />
         <h2 className="text-3xl font-bold text-[#650933]">Select Review Type</h2>
         <p className="text-lg text-gray-600">
           Please select the area you would like to provide feedback for.
         </p>
-        <div className="flex flex-col md:flex-row gap-6">
+        {/* ✅ UPDATED: Added grid-cols-3 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <button
             onClick={() => navigate('/review/room')}
             className="flex-1 flex flex-col items-center justify-center gap-4 p-8 bg-primary text-white rounded-lg shadow-lg hover:bg-opacity-90 transition-all"
@@ -48,6 +46,14 @@ const SelectCategoryPage: React.FC = () => {
           >
             <Utensils size={48} />
             <span className="text-2xl font-semibold">Food & Beverage</span>
+          </button>
+          {/* ✅ ADDED: New button for CFC */}
+          <button
+            onClick={() => navigate('/review/cfc')}
+            className="flex-1 flex flex-col items-center justify-center gap-4 p-8 bg-primary text-white rounded-lg shadow-lg hover:bg-opacity-90 transition-all"
+          >
+            <Coffee size={48} />
+            <span className="text-2xl font-semibold">Coffee Clatch</span>
           </button>
         </div>
       </div>

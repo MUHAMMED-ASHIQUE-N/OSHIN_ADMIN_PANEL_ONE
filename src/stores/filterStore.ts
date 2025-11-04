@@ -1,7 +1,7 @@
-// src/stores/filterStore.ts
 import { create } from 'zustand';
 
-type Category = 'room' | 'f&b';
+// ✅ ADDED 'cfc'
+export type Category = 'room' | 'f&b' | 'cfc';
 
 interface FilterState {
   category: Category;

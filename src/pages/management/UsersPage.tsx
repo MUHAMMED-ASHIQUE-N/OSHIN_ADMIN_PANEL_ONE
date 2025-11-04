@@ -162,7 +162,7 @@ const UsersPage: React.FC = () => {
           </div>
           
           {/* ✅ START: Updated Role Select */}
-          <div>
+         <div>
             <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
             <select
               name="role" id="role"
@@ -173,12 +173,11 @@ const UsersPage: React.FC = () => {
               <option value="staff">Staff (Generic)</option>
               <option value="staff_room">Staff (Room)</option>
               <option value="staff_f&b">Staff (F&B)</option>
+              <option value="staff_cfc">Staff (CFC)</option> {/* ✅ ADDED */}
               <option value="viewer">Associate (Viewer)</option>
               <option value="admin">Admin</option>
             </select>
-            {editingUser?._id === currentAdminId && editingUser?.role === 'admin' && (
-              <p className="text-xs text-gray-500 mt-1">You cannot change your own role.</p>
-            )}
+            {/* ... (admin self-edit warning) ... */}
           </div>
           {/* ✅ END: Updated Role Select */}
           

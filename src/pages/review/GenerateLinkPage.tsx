@@ -10,7 +10,6 @@ const GenerateLinkPage: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { generatedToken, isLoading, error, generateToken, clearToken } = useTokenStore();
   
-  // Clear any old token when the page loads
   useEffect(() => {
     clearToken();
   }, [clearToken]);
@@ -22,15 +21,12 @@ const GenerateLinkPage: React.FC = () => {
 
   const getFullLink = () => {
     if (!generatedToken) return '';
-    // Construct the full public URL
     return `${window.location.origin}/public/review/${generatedToken}`;
   };
 
   const handleCopyToClipboard = () => {
     const link = getFullLink();
     if (!link) return;
-
-    // Use fallback for clipboard
     try {
       const ta = document.createElement('textarea');
       ta.value = link;
@@ -59,7 +55,17 @@ const GenerateLinkPage: React.FC = () => {
     }
   };
 
-  const linkCategory = user?.role === 'staff_f&b' ? 'Food & Beverage' : 'Room';
+  // ✅ UPDATED: Determine link category text based on role
+  const getLinkCategory = () => {
+    switch(user?.role) {
+      case 'staff_room': return 'Room';
+      case 'staff_f&b': return 'Food & Beverage';
+      case 'staff_cfc': return 'Coffee Clatch';
+      case 'admin': return 'Admin (Test Link)';
+      default: return 'General';
+    }
+  };
+  const linkCategory = getLinkCategory();
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gray-100 p-4">

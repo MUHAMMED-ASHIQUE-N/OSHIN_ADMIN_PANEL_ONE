@@ -17,15 +17,21 @@ const LoginPage: React.FC = () => {
     }
   }, [user, navigate]);
 
-  // ✅ CHANGED: Updated redirect logic
-const redirectUser = (role: IUser['role']) => {
+// ✅ FIXED: Updated redirect logic to include 'staff_cfc'
+  const redirectUser = (role: IUser['role']) => {
     if (role === 'admin' || role === 'viewer') {
       navigate('/'); // Admin/Viewer dashboard
-    } else if (role === 'staff' || role === 'staff_room' || role === 'staff_f&b') {
-      // ✅ Send ALL staff roles to the new dashboard
+    } else if (
+        role === 'staff' || 
+        role ==='staff_room' || 
+        role === 'staff_f&b' || 
+        role === 'staff_cfc' // Added this role
+    ) {
+      // Send ALL staff roles to the new dashboard
       navigate('/review/dashboard'); 
     }
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const loggedInUser = await login(username, password);

@@ -20,6 +20,9 @@ const ProtectedRoute = lazy(()=>import("./components/auth/ProtectedRoute"))
 import { useCompositeStore } from "./stores/compositeStore";
 import { useFilterStore } from "./stores/filterStore";
 import { useAnalyticsStore } from "./stores/analyticsStore";
+const LowRatedQuestionsPage = lazy(() => import("./pages/management/LowRatedQuestionsPage"));
+const QuestionDetailReportPage = lazy(() => import("./pages/management/QuestionDetailReportPage"));
+
 // ✅ 1. Add new lazy-loaded pages
 const StaffDashboard = lazy(() => import("./pages/review/StaffDashboard"));
 const GenerateLinkPage = lazy(() => import("./pages/review/GenerateLinkPage"));
@@ -88,24 +91,20 @@ function App() {
                 <Route path="questions" element={<QuestionsPage />} />
                 <Route path="users" element={<UsersPage />} />
                 <Route path="responses" element={<GuestIssuesPage />} /> {/* Renamed route */}
+                <Route path="report/low-rated-questions" element={<LowRatedQuestionsPage />} />
+                <Route path="report/question-detail/:questionId" element={<QuestionDetailReportPage />} />
               </Route>
             </Route>
           </Route>
 
           {/* Staff Routes */}
-           {/* ✅ CHANGED: Staff Routes */}
-          {/* Allow all staff types to access these routes. The login logic will handle redirection. */}
-         <Route element={<ProtectedRoute allowedRoles={['staff', 'staff_room', 'staff_f&b']} />}>
-            {/* The new staff landing page */}
+          {/* ✅ UPDATED: Staff Routes */}
+        {/* ✅ UPDATED: Staff Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['staff', 'staff_room', 'staff_f&b', 'staff_cfc']} />}>
             <Route path="/review/dashboard" element={<StaffDashboard />} />
-            {/* The page for staff to generate links */}
             <Route path="/review/generate" element={<GenerateLinkPage />} />
-            
-            {/* These routes are now accessed from the StaffDashboard */}
             <Route path="/review/select" element={<SelectCategoryPage />} />
-            <Route path="/review/:category" element={<ReviewPage />} />
-            
-            {/* Redirect from base /review to the new dashboard */}
+            <Route path="/review/:category" element={<ReviewPage />} /> 
             <Route path="/review" element={<Navigate to="/review/dashboard" replace />} />
           </Route>
 

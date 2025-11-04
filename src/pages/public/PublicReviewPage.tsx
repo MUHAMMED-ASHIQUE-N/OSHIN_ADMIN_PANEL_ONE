@@ -55,6 +55,7 @@ const PublicReviewPage: React.FC = () => {
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestRoom, setGuestRoom] = useState("");
+  const [guestEmail, setGuestEmail] = useState(""); // ✅ ADD THIS LINE
   const [description, setDescription] = useState("");
 
   const {
@@ -66,12 +67,9 @@ const PublicReviewPage: React.FC = () => {
   } = useTokenStore();
   
   const {
-    questions,
-    answers,
-    isSubmitting,
-    isLoading: isQuestionsLoading,
-    fetchQuestions,
-    setAnswer,
+    questions, answers, yesNoAnswerText, // ✅ Get new text state
+    isSubmitting, isLoading: isQuestionsLoading,
+    fetchQuestions, setAnswer, setYesNoAnswerText, // ✅ Get new text action
     resetReview,
   } = useReviewStore();
 
@@ -101,48 +99,82 @@ const PublicReviewPage: React.FC = () => {
   }, [questions]);
 
   // 4. Handle Submit
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     if (!publicCategory || !token) return;
 
     // --- Validation ---
     if (publicCategory === "room") {
-      if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
-      if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
-      if (!guestRoom.trim()) { toast.error("Please enter the Guest Room number."); return; }
+        if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
+        if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
+        if (!guestRoom.trim()) { toast.error("Please enter the Guest Room number."); return; }
+    }
+    // ✅ ADDED F&B/CFC VALIDATION
+    if (publicCategory === "f&b" || publicCategory === "cfc") {
+        if (!guestEmail.trim()) {
+            toast.error("Please enter the Guest Email.");
+            return;
+        }
+        if (!/\S+@\S+\.\S+/.test(guestEmail)) {
+           toast.error("Please enter a valid email address.");
+           return;
+        }
     }
     // --- End Validation ---
 
+    // ... (Your answersPayload logic is correct) ...
     const answersPayload = Object.keys(answers)
-        .filter(questionId => answers[questionId] !== null && answers[questionId] !== undefined)
-        .map(questionId => {
-            const question = questions.find(q => q._id === questionId);
-            const answer = answers[questionId];
-            if (question?.questionType === "rating") return { question: questionId, rating: answer as number };
-            if (question?.questionType === "yes_no") return { question: questionId, answerBoolean: answer as boolean };
-            return null;
-        })
-        .filter(Boolean) as ReviewPayload['answers'];
+       .filter(questionId => answers[questionId] !== null && answers[questionId] !== undefined)
+       .map(questionId => {
+           const question = questions.find(q => q._id === questionId);
+           const answer = answers[questionId];
 
-    // ✅ MODIFIED: Payload is now conditional
+           if (question?.questionType === "rating") {
+               return { question: questionId, rating: answer as number };
+           }
+           if (question?.questionType === "yes_no") {
+               const text = yesNoAnswerText[questionId];
+               return {
+                   question: questionId,
+                   answerBoolean: answer as boolean,
+                   answerText: answer === true ? text : undefined 
+               };
+           }
+           return null;
+       })
+       .filter(Boolean) as ReviewPayload['answers'];
+
+    // ✅ Dynamically create the guestInfo payload
+    const getGuestInfo = () => {
+        if (publicCategory === 'room') {
+            return {
+                name: guestName.trim(),
+                phone: guestPhone.trim(),
+                roomNumber: guestRoom.trim(),
+            };
+        }
+        if (publicCategory === 'f&b' || publicCategory === 'cfc') {
+            return {
+                email: guestEmail.trim(),
+            };
+        }
+        return undefined;
+    };
+
     const payload: ReviewPayload = {
         category: publicCategory,
         answers: answersPayload,
-        // Only send description and guestInfo if the category is 'room'
-        description: publicCategory === "room" ? description.trim() : undefined,
-        roomGuestInfo:
-            publicCategory === "room"
-                ? { name: guestName.trim(), phone: guestPhone.trim(), roomNumber: guestRoom.trim() }
-                : undefined,
+        description: description.trim(),
+        guestInfo: getGuestInfo(), // ✅ USE THE NEW DYNAMIC OBJECT
     };
 
     const success = await submitPublicReview(token, payload);
     if (success) {
         toast.success('Feedback submitted successfully!');
         setPage("thankyou");
-        resetReview(); // Clear form
+        resetReview();
     }
-  };
-
+    // Error is handled by publicError
+};
   // --- Render Logic ---
   if (isPublicLoading || isQuestionsLoading) {
     return (
@@ -152,8 +184,7 @@ const PublicReviewPage: React.FC = () => {
     );
   }
 
- // If token is invalid or expired
-  if (publicError && !isSubmitting) {
+if (publicError && !isSubmitting) {
      return (
        <div className="min-h-screen flex items-center justify-center bg-gray-100">
          <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -255,74 +286,105 @@ const PublicReviewPage: React.FC = () => {
                 ))}
               </tbody>
               {/* Yes/No Questions Body */}
-              {yesNoQuestions.length > 0 && (
+            {yesNoQuestions.length > 0 && (
                 <tbody className="border-t-2 border-gray-200 mt-4 pt-4">
                   {yesNoQuestions.map((q) => (
-                    <tr key={q._id} className="align-middle border-t">
-                      <td className="py-2 pr-4 w-2/5">{q.text}</td>
-                      <YesNoBox
-                        name={q._id} value="yes" label="YES"
-                        checked={answers[q._id] === true}
-                        onChange={() => setAnswer(q._id, true)}
-                      />
-                      <YesNoBox
-                        name={q._id} value="no" label="NO"
-                        checked={answers[q._id] === false}
-                        onChange={() => setAnswer(q._id, false)}
-                      />
-                      <td colSpan={4}></td>
-                      <td></td>
-                    </tr>
+                    // ✅ Use React.Fragment to group row and text input row
+                    <React.Fragment key={q._id}>
+                      <tr className="align-middle border-t">
+                        <td className="py-2 pr-4 w-2/5">{q.text}</td>
+                        <YesNoBox
+                          name={q._id} value="yes" label="YES"
+                          checked={answers[q._id] === true}
+                          onChange={() => setAnswer(q._id, true)}
+                        />
+                        <YesNoBox
+                          name={q._id} value="no" label="NO"
+                          checked={answers[q._id] === false}
+                          onChange={() => setAnswer(q._id, false)}
+                        />
+                        <td colSpan={4}></td>
+                        <td></td>
+                      </tr>
+                      
+                      {/* ✅ NEW: Conditionally render text input row */}
+                      {answers[q._id] === true && (
+                        <tr className="align-middle border-b">
+                            <td className="py-2 pr-4 text-right italic text-gray-600">
+                                Please specify:
+                            </td>
+                            <td colSpan={11} className="py-2">
+                                <input
+                                    type="text"
+                                    value={yesNoAnswerText[q._id] || ''}
+                                    onChange={(e) => setYesNoAnswerText(q._id, e.target.value)}
+                                    placeholder="Optional comment..."
+                                    className="w-full text-sm p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               )}
             </table>
           </div>
 
-          {/* ✅ START: Conditional Room-Only Section */}
-          {publicCategory === "room" && (
-            <>
-              {/* --- Open Feedback Section --- */}
-              <section className="mt-6">
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Please tell us your overall experience and in particular any memorable experience...
-                  </label>
-                  <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={4}
-                      className="w-full mt-2 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Any memorable experiences or exceptional associates..."
-                  />
-              </section>
+           
+<section className="mt-6">
+    <label className="text-sm font-medium text-gray-700 mb-2 block">
+        Please tell us your overall experience and in particular any memorable experience or exceptional associate you have encountered during your stay (please be specific)
+    </label>
+    <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={4}
+        className="w-full mt-2 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+        placeholder="Any memorable experiences or exceptional associates..."
+    />
+</section>
 
-              {/* --- Guest Info (ROOMS ONLY) --- */}
-              <section className="mt-6 p-4 border rounded-lg bg-gray-50">
-                  <h3 className="text-lg font-semibold text-primary mb-4">
-                      Guest Information (Required)
-                  </h3>
-                  <div className="space-y-4">
-                      <DottedLineInput
-                          label="Guest Name"
-                          value={guestName}
-                          onChange={setGuestName}
-                      />
-                      <div className="flex flex-col md:flex-row gap-4">
-                          <DottedLineInput
-                              label="Phone"
-                              value={guestPhone}
-                              onChange={setGuestPhone}
-                          />
-                          <DottedLineInput
-                              label="Room No"
-                              value={guestRoom}
-                              onChange={setGuestRoom}
-                          />
-                      </div>
-                  </div>
-              </section>
-            </>
-          )}
+{/* --- Guest Info Section (Now Conditional) --- */}
+<section className="mt-6 p-4 border rounded-lg bg-gray-50">
+    <h3 className="text-lg font-semibold text-primary mb-4">
+        Guest Information
+    </h3>
+
+    {/* === ROOM GUEST INFO === */}
+    {publicCategory === "room" && (
+        <div className="space-y-4">
+             <DottedLineInput
+                label="Guest Name"
+                value={guestName}
+                onChange={setGuestName}
+            />
+            <div className="flex flex-col md:flex-row gap-4">
+                <DottedLineInput
+                    label="Phone"
+                    value={guestPhone}
+                    onChange={setGuestPhone}
+                />
+                <DottedLineInput
+                    label="Room No"
+                    value={guestRoom}
+                    onChange={setGuestRoom}
+                />
+            </div>
+        </div>
+    )}
+
+    {/* === F&B or CFC GUEST INFO === */}
+    {(publicCategory === "f&b" || publicCategory === "cfc") && (
+        <div className="space-y-4">
+            <DottedLineInput
+                label="Guest Email"
+                value={guestEmail}
+                onChange={setGuestEmail}
+            />
+        </div>
+    )}
+</section>
           {/* ✅ END: Conditional Room-Only Section */}
 
 

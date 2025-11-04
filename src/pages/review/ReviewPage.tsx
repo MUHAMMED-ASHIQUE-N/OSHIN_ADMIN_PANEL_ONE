@@ -49,12 +49,13 @@ const YesNoBox = ({ name, value, checked, onChange, label }: { name: string; val
 
 // --- Main Review Page Component ---
 const ReviewPage: React.FC = () => {
-    const { category } = useParams<{ category: "room" | "f&b" }>();
+    const { category } = useParams<{ category: "room" | "f&b" | "cfc" }>();
     const navigate = useNavigate();
     const [page, setPage] = useState("review");
 
     const [guestName, setGuestName] = useState("");
     const [guestPhone, setGuestPhone] = useState("");
+    const [guestEmail, setGuestEmail] = useState(""); // ✅ ADD THIS LINE
     const [guestRoom, setGuestRoom] = useState("");
     const [description, setDescription] = useState("");
 
@@ -94,71 +95,93 @@ const ReviewPage: React.FC = () => {
         };
     }, [questions]);
 
-    const handleSubmit = async () => {
-        if (!category) return;
+ // REPLACE your old handleSubmit with this
+const handleSubmit = async () => {
+    if (!category) return;
 
-        // --- Validation Start ---
-
-        // ✅ REMOVED: Validation for rating questions and yes/no questions is no longer required.
-
-        // ✅ KEPT: Validation for guest info if category is 'room'
-        if (category === "room") {
-            if (!guestName.trim()) {
-                toast.error("Please enter the Guest Name.");
-                return; // Stop submission
-            }
-            if (!guestPhone.trim()) {
-                toast.error("Please enter the Guest Phone number.");
-                return; // Stop submission
-            }
-            if (!guestRoom.trim()) {
-                toast.error("Please enter the Guest Room number.");
-                return; // Stop submission
-            }
+    // --- Frontend Validation ---
+    if (category === "room") {
+        if (!guestName.trim()) {
+            toast.error("Please enter the Guest Name.");
+            return; // Stop submission
         }
-        // --- Validation End ---
-
-
-        // Build the payload (only if validation passes)
-        // ✅ CHANGED: Build the payload ONLY from questions that have an answer.
-        // This avoids sending 0 or 'false' for unanswered questions.
-        const answersPayload = Object.keys(answers)
-            .filter(questionId => answers[questionId] !== null && answers[questionId] !== undefined) // Filter out unanswered
-            .map(questionId => {
-                const question = questions.find(q => q._id === questionId);
-                const answer = answers[questionId];
-
-                if (question?.questionType === "rating") {
-                    return { question: questionId, rating: answer as number }; // Answer will be 0-10
-                }
-                if (question?.questionType === "yes_no") {
-                    return { question: questionId, answerBoolean: answer as boolean }; // Answer will be true/false
-                }
-                return null; // Should not happen
-            })
-            .filter(Boolean); // Filter out any null entries
-
-        const payload = {
-            category,
-            answers: answersPayload,
-            description: description.trim(),
-            roomGuestInfo:
-                category === "room"
-                    ? {
-                        name: guestName.trim(),
-                        phone: guestPhone.trim(),
-                        roomNumber: guestRoom.trim(),
-                    }
-                    : undefined,
-        };
-
-        // @ts-ignore
-        const success = await submitReview(payload);
-        if (success) {
-            toast.success('Feedback submitted successfully!');
-            setPage("thankyou");
+        if (!guestPhone.trim()) {
+            toast.error("Please enter the Guest Phone number.");
+            return; // Stop submission
         }
+        if (!guestRoom.trim()) {
+            toast.error("Please enter the Guest Room number.");
+            return; // Stop submission
+        }
+    }
+
+    if (category === "f&b" || category === "cfc") {
+        if (!guestEmail.trim()) {
+            toast.error("Please enter the Guest Email.");
+            return;
+        }
+        // Simple email regex check
+        if (!/\S+@\S+\.\S+/.test(guestEmail)) {
+           toast.error("Please enter a valid email address.");
+           return;
+        }
+    }
+    // --- End Validation ---
+
+
+    // --- Build Answers Payload ---
+    const answersPayload = Object.keys(answers)
+        .filter(questionId => answers[questionId] !== null && answers[questionId] !== undefined) 
+        .map(questionId => {
+            const question = questions.find(q => q._id === questionId);
+            const answer = answers[questionId];
+
+            if (question?.questionType === "rating") {
+                return { question: questionId, rating: answer as number };
+            }
+            if (question?.questionType === "yes_no") {
+                return { question: questionId, answerBoolean: answer as boolean };
+            }
+            return null;
+        })
+        .filter(Boolean); 
+
+    
+    // ✅ Dynamically create the guestInfo payload
+    const getGuestInfo = () => {
+        if (category === 'room') {
+            return {
+                name: guestName.trim(),
+                phone: guestPhone.trim(),
+                roomNumber: guestRoom.trim(),
+            };
+        }
+        if (category === 'f&b' || category === 'cfc') {
+            return {
+                email: guestEmail.trim(),
+                // You can add optional name/phone here if you collect them
+                // name: guestName.trim(), 
+                // phone: guestPhone.trim(),
+            };
+        }
+        return undefined;
     };
+
+    // ✅ Build the final payload with the correct 'guestInfo' key
+    const payload = {
+        category,
+        answers: answersPayload,
+        description: description.trim(),
+        guestInfo: getGuestInfo(), // Use the correct key
+    };
+
+    // @ts-ignore
+    const success = await submitReview(payload);
+    if (success) {
+        toast.success('Feedback submitted successfully!');
+        setPage("thankyou");
+    }
+};
 
     const handleReset = () => {
         // resetReview(); // Called in useEffect on navigate
@@ -369,33 +392,47 @@ const ReviewPage: React.FC = () => {
                         />
                     </section>
 
-                    {/* --- Guest Info (ROOMS ONLY) --- */}
-                    {category === "room" && (
-                        <section className="mt-6 p-4 border rounded-lg bg-gray-50">
-                            <h3 className="text-lg font-semibold text-primary mb-4">
-                                Guest Information
-                            </h3>
-                            <div className="space-y-4">
-                                <DottedLineInput
-                                    label="Guest Name"
-                                    value={guestName}
-                                    onChange={setGuestName}
-                                />
-                                <div className="flex flex-col md:flex-row gap-4"> {/* Added md:flex-row for responsiveness */}
-                                    <DottedLineInput
-                                        label="Phone"
-                                        value={guestPhone}
-                                        onChange={setGuestPhone}
-                                    />
-                                    <DottedLineInput
-                                        label="Room No"
-                                        value={guestRoom}
-                                        onChange={setGuestRoom}
-                                    />
-                                </div>
-                            </div>
-                        </section>
-                    )}
+                  {/* --- Guest Info Section --- */}
+<section className="mt-6 p-4 border rounded-lg bg-gray-50">
+    <h3 className="text-lg font-semibold text-primary mb-4">
+        Guest Information
+    </h3>
+
+    {/* === ROOM GUEST INFO === */}
+    {category === "room" && (
+        <div className="space-y-4">
+            <DottedLineInput
+                label="Guest Name"
+                value={guestName}
+                onChange={setGuestName}
+            />
+            <div className="flex flex-col md:flex-row gap-4">
+                <DottedLineInput
+                    label="Phone"
+                    value={guestPhone}
+                    onChange={setGuestPhone}
+                />
+                <DottedLineInput
+                    label="Room No"
+                    value={guestRoom}
+                    onChange={setGuestRoom}
+                />
+            </div>
+        </div>
+    )}
+
+    {/* === F&B or CFC GUEST INFO === */}
+    {(category === "f&b" || category === "cfc") && (
+        <div className="space-y-4">
+            <DottedLineInput
+                label="Guest Email"
+                value={guestEmail}
+                onChange={setGuestEmail}
+            />
+            {/* You can add optional fields here if needed */}
+        </div>
+    )}
+</section>
 
                     {/* --- Submit Button --- */}
                     <div className="mt-8 text-center">
