@@ -230,11 +230,8 @@ const handleSubmit = async () => {
                     <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
 
                     {/* --- New Text --- */}
-                    <p className="text-lg text-gray-700 mb-2">
-                        Looking forward to welcome you back
-                    </p>
-                    <p className="text-md text-gray-600 mb-8">
-                        _                  Yet another Remarkable stay with Oshin Hotels & Resorts
+                    <p className="text-lg text-primary mb-2">
+                        Looking forward to welcome you back Yet another Remarkable stay with Oshin Hotels & Resorts
                     </p>
                     {/* --- End New Text --- */}
 
