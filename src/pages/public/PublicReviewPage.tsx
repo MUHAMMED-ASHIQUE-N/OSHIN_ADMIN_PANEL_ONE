@@ -203,7 +203,6 @@ if (publicError && !isSubmitting) {
           <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
           <p className="text-lg text-primary mb-8">  Looking forward to welcome you back Yet another Remarkable stay with Oshin Hotels & Resorts
-
           </p>
           {/* No "Submit Another" button for public link */}
         </div>
@@ -307,8 +306,8 @@ if (publicError && !isSubmitting) {
                         <td></td>
                       </tr>
                       
-                      {/* ✅ NEW: Conditionally render text input row */}
-                      {answers[q._id] === true && (
+                      {/* ✅ UPDATED: Conditionally render text input row ONLY for f&b and cfc */}
+                      {answers[q._id] === true && (publicCategory === "f&b" || publicCategory === "cfc") && (
                         <tr className="align-middle border-b">
                             <td className="py-2 pr-4 text-right italic text-gray-600">
                                 Please specify:
@@ -331,7 +330,7 @@ if (publicError && !isSubmitting) {
             </table>
           </div>
 
-           
+            
 <section className="mt-6">
     <label className="text-sm font-medium text-gray-700 mb-2 block">
         Please tell us your overall experience and in particular any memorable experience or exceptional associate you have encountered during your stay (please be specific)
@@ -374,7 +373,7 @@ if (publicError && !isSubmitting) {
         </div>
     )}
 
-    {/* === F&B or CFC GUEST INFO === */}
+    {/* === F&B or CFC GGUEST INFO === */}
     {(publicCategory === "f&b" || publicCategory === "cfc") && (
         <div className="space-y-4">
             <DottedLineInput
