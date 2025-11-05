@@ -1,3 +1,4 @@
+// src/stores/managementStore.ts
 import { create } from 'zustand';
 import axios from 'axios';
 import { useAuthStore } from './authStore';
@@ -31,6 +32,7 @@ export interface ManagementUser {
   isActive: boolean;
   // ✅ ADDED 'staff_cfc'
   role: "admin" | "staff" | "viewer" | "staff_room" | "staff_f&b" | "staff_cfc";
+  hotelId?: string; // <-- ADD THIS
 }
 
 // ✅ ADDED 'staff_cfc'
@@ -41,12 +43,14 @@ type CreateUserPayload = {
   username: string;
   password?: string;
   role: UserRole;
+  hotelId?: string; // <-- ADD THIS
 };
 
 type UpdateUserPayload = {
   fullName: string;
   username: string;
   role: UserRole;
+  hotelId?: string; // <-- ADD THIS
 };
 
 // ✅ ADDED 'cfc'

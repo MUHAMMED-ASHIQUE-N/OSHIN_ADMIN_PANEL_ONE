@@ -16,6 +16,10 @@ const CompositesPageMngt = lazy(
 );
 const QuestionsPage = lazy(() => import("./pages/management/QuestionsPage"));
 const UsersPage = lazy(() => import("./pages/management/UsersPage"));
+const HotelsManagementPage = lazy(
+  () => import("./pages/management/HotelManagementPage")
+);
+
 const GuestIssuesPage = lazy(
   () => import("./pages/management/YesNoResponsesPage")
 ); // Kept for now, rename if needed
@@ -109,6 +113,7 @@ function App() {
                 <Route path="questions" element={<QuestionsPage />} />
                 <Route path="users" element={<UsersPage />} />
                 <Route path="responses" element={<GuestIssuesPage />} />{" "}
+                <Route path="hotels" element={<HotelsManagementPage />} />{" "}
                 {/* Renamed route */}
                 <Route
                   path="report/low-rated-questions"

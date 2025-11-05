@@ -24,6 +24,7 @@ const managementNavItems = [
   { href: "/management/responses", icon: ListChecks, label: "Yes/No Responses" },
   // ✅ FIX: Updated href to the full, correct path
   { href: "/management/report/low-rated-questions", icon: BarChart2, label: "Low Rating Report" },
+  { href: "/management/hotels", icon: BarChart2, label: "Hotel" },
 ];
 
 const ManagementLayout: React.FC = () => {

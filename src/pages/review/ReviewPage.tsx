@@ -2,7 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 // ✅ Import all necessary types and store hooks
 import { useReviewStore, ReviewPayload } from "../../stores/reviewStore";
 import { useNavigate, useParams } from "react-router-dom";
-import logo from "../../assets/logo/logo_oshin.svg";
+import Calicut_logo from "../../assets/logo/Oshiln_logo_calicut.svg";
+import wayanad_logo from "../../assets/logo/logo_oshin.svg";
+
+
 import toast from 'react-hot-toast';
 import { useAuthStore } from "../../stores/authStore";
 
@@ -72,9 +75,24 @@ const ReviewPage: React.FC = () => {
         resetReview,
         error
     } = useReviewStore();
-    const logout = useAuthStore((state) => state.logout);
+ const logout = useAuthStore((state) => state.logout);
+    const user = useAuthStore((state) => state.user);
 
+// ✅ STEP 2: Determine which logo to show (FIXED)
+    const logoToShow = useMemo(() => {
+        // Get the hotel name safely and convert to lowercase
+        // We need optional chaining on .toLowerCase() as well,
+        // in case 'name' itself is undefined (or the chain resolves to undefined).
+        const hotelName = user?.hotelId?.name?.toLowerCase(); // <-- THE FIX IS HERE
 
+        if (hotelName?.includes("wayanad")) {
+            return wayanad_logo;
+        }
+
+        // Default to Calicut logo if it's 'calicut' or if user/hotel is undefined
+        return Calicut_logo;
+
+    }, [user]); // This will re-run only when the user object changes
     useEffect(() => {
         resetReview();
         if (category) {
@@ -242,7 +260,7 @@ const ReviewPage: React.FC = () => {
         <div className="min-h-screen bg-gray-100 font-sans">
             <div className="max-w-4xl mx-auto bg-white min-h-screen shadow-2xl flex flex-col">
                 <header className="flex items-center flex-col py-5 bg-primary text-white">
-                    <img src={logo} alt="Oshin Logo" className="w-28" />
+                    <img src={logoToShow} alt="Oshin Logo" className="w-28" />
                     <div>
                         <h1 className="text-3xl font-light tracking-wider">
                             Oshin Hotels & Resorts
