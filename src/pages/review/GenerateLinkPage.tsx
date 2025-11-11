@@ -51,7 +51,7 @@ const GenerateLinkPage: React.FC = () => {
     if (platform === 'whatsapp') {
       window.open(`https://api.whatsapp.com/send?text=${message}`, '_blank');
     } else if (platform === 'email') {
-window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=Oshin Hotels Feedback&body=${encodeURIComponent(message)}`, '_blank');
+window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=Oshin Hotels Feedback&body=${(message)}`, '_blank');
     }
   };
 
