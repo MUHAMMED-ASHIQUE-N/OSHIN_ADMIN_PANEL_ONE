@@ -247,7 +247,7 @@ if (publicError && !isSubmitting) {
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
           <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
-          <p className="text-lg text-primary mb-8">  Looking forward to welcome you back for yet another Remarkable stay with Oshin Hotels & Resorts
+          <p className="text-lg text-primary mb-8">  Looking forward to welcome you back for yet another Remarkable stay with {welcomeText}
           </p>
           {/* No "Submit Another" button for public link */}
         </div>
