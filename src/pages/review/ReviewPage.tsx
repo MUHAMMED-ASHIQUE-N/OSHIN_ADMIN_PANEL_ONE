@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useReviewStore, ReviewPayload } from "../../stores/reviewStore";
 import { useNavigate, useParams } from "react-router-dom";
 import Calicut_logo from "../../assets/logo/Oshiln_logo_calicut.svg";
-import wayanad_logo from "../../assets/logo/logo_oshin.svg";
+import wayanad_logo from "../../assets/logo/oshin_wayanad_logo.svg";
 
 
 import toast from 'react-hot-toast';

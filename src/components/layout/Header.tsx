@@ -41,8 +41,9 @@ export const Header = ({ toggleSidebar, isMobile }: HeaderProps) => {
           </div>
           
           <div className="flex items-center gap-4 md:gap-6">
-            <button onClick={openModal} title="Download Yearly Report"> {/* ✅ Call openModal onClick */}
-              <FaDownload className="text-xl text-gray-400 hover:text-primary cursor-pointer" />
+            <button onClick={openModal} title="Download Yearly Report" className="flex gap-4 font-semibold"> {/* ✅ Call openModal onClick */}
+            Download
+              <FaDownload className="text-xl text-primary hover:text-primary/75 cursor-pointer" />
             </button>
           </div>
         </div>

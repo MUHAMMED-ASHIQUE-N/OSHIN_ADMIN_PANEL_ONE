@@ -13,7 +13,7 @@
     const BreakdownChart: React.FC<{ data: { name: string; value: number } }> = ({ data }) => {
     const chartData = useMemo(() => [
         { name: data.name, value: data.value },
-        { name: "Remaining", value: Math.max(0, 10 - data.value) },
+        { name: "", value: Math.max(0, 10 - data.value) },
     ], [data]);
 
     return (
@@ -22,7 +22,7 @@
             {data.name}
         </h3>
         {/* Use the new 'size' prop. 'small' disables the legend. */}
-        <div className="flex-1"> {/* Allow chart to fill remaining space */}
+        <div className="flex-1"> {/* Allow chart to fill  space */}
             <PieChartt data={chartData} title={null} size="small" />
         </div>
         <p className="font-bold text-xl text-primary mt-2">{data.value.toFixed(2)}</p>
@@ -74,7 +74,7 @@
                     if (mainChartData.length === 1) {
                         const singlePointData = [
                             { name: mainChartData[0].name, value: mainChartData[0].value },
-                            { name: "Remaining", value: Math.max(0, 10 - mainChartData[0].value) }
+                            { name: "", value: Math.max(0, 10 - mainChartData[0].value) }
                         ];
                         // ✅ ADDED: showLabels={true}
                         return <PieChartt data={singlePointData} title={chartTitle} size="medium" showLabels={true} />;

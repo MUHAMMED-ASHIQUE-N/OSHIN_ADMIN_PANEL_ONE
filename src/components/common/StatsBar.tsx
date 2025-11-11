@@ -68,7 +68,7 @@ const StatsBar = () => {
               onClick={() => navigate("/management/composites")}
               className="bg-[#5D1130] hover:bg-[#751b40] text-white font-semibold px-6 py-6 rounded-[20px] shadow transition-all w-full lg:w-auto"
             >
-              Manage Composite
+              Manage    
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-//Components/common/yearlyReportModal.tsx
+// Components/common/yearlyReportModal.tsx
 import React, { useState, useEffect } from 'react';
 import { useReportStore } from '../../stores/reportStore';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -32,7 +32,8 @@ const YearlyReportModal = () => {
     clearYears,
   } = useReportStore();
 
-  const [category, setCategory] = useState<'room' | 'f&b' | ''>('');
+  // ✅ UPDATED: Added 'cfc' to the category state type
+  const [category, setCategory] = useState<'room' | 'f&b' | 'cfc' | ''>('');
   const [year, setYear] = useState<number | ''>('');
 
   // When the category changes, fetch new years
@@ -76,13 +77,16 @@ const YearlyReportModal = () => {
           <select
             id="category"
             value={category}
-            onChange={(e) => setCategory(e.target.value as 'room' | 'f&b' | '')}
+            // ✅ UPDATED: Included 'cfc' in the onChange type assertion
+            onChange={(e) => setCategory(e.target.value as 'room' | 'f&b' | 'cfc' | '')}
             disabled={isLoadingReport}
             className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
           >
             <option value="">-- Select a category --</option>
             <option value="room">Room</option>
             <option value="f&b">Food & Beverage (F&B)</option>
+            {/* ✅ ADDED: New option for CFC */}
+            <option value="cfc">Customer Feedback Center (CFC)</option>
           </select>
         </div>
 

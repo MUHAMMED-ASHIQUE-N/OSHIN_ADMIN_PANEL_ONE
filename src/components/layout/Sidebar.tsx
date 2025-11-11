@@ -40,7 +40,7 @@ export const Sidebar = ({
 
     // Filtered lists based on category
     const filteredComposites = useMemo(() => {
-        return (composites || []).filter(c => c && c.category === category);
+        return (composites || []).filter(c => c && c.category === category && c.isActive);
     }, [composites, category]);
 
     const filteredQuestions = useMemo(() => {

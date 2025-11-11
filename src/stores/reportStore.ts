@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 // --- Interfaces for the API response ---
-// This is the "flat" data your API sends
+// (No changes needed in interfaces)
 interface ApiDailyBreakdown {
   date: string;
   overallAverage: number;
@@ -36,8 +36,6 @@ interface ApiYearlyCompositeAvg {
   compositeName: string;
   yearlyAverage: number;
 }
-
-// This is the raw, flat response from your API
 interface ApiDashboardResponse {
   dailyBreakdown: ApiDailyBreakdown[];
   monthlyQuestionAverages: ApiMonthlyQuestionAvg[];
@@ -56,8 +54,9 @@ interface ReportState {
   error: string | null;
   openModal: () => void;
   closeModal: () => void;
-  fetchAvailableYears: (category: 'room' | 'f&b') => Promise<void>;
-  downloadReport: (year: number, category: 'room' | 'f&b') => Promise<void>;
+  // ✅ UPDATED: Added 'cfc' to the category type
+  fetchAvailableYears: (category: 'room' | 'f&b' | 'cfc') => Promise<void>;
+  downloadReport: (year: number, category: 'room' | 'f&b' | 'cfc') => Promise<void>;
   clearYears: () => void;
 }
 
@@ -72,8 +71,8 @@ export const useReportStore = create<ReportState>((set) => ({
   closeModal: () => set({ isModalOpen: false }),
   clearYears: () => set({ availableYears: [] }),
 
+  // ✅ UPDATED: Function signature now includes 'cfc'
   fetchAvailableYears: async (category) => {
-    // ... (This function was correct, no changes needed)
     set({ isLoadingYears: true, error: null });
     const token = useAuthStore.getState().token;
     if (!token) {
@@ -96,6 +95,7 @@ export const useReportStore = create<ReportState>((set) => ({
     }
   },
 
+  // ✅ UPDATED: Function signature now includes 'cfc'
   downloadReport: async (year, category) => {
     set({ isLoadingReport: true, error: null });
     const token = useAuthStore.getState().token;
@@ -107,57 +107,45 @@ export const useReportStore = create<ReportState>((set) => ({
         params: { year, category },
       };
 
-      // 1. Fetch the raw, flat data from the API
       const response = await axios.get<ApiDashboardResponse>(
         `${BASE_URL}/analytics/full-yearly-report`,
         config
       );
-
       const apiData = response.data;
       if (!apiData) {
         throw new Error('No data received from server.');
       }
-
-      // 2. Transform the flat API data into the nested FullReportData structure
+      
+      // Data transformation logic remains the same
       const transformedData: FullReportData = {
-        // Create questionHeaders from the yearly questions list
         questionHeaders: apiData.yearlyQuestionAverages.map((q) => ({
           id: q.questionId,
           text: q.questionText,
         })),
-
-        // This is the new field for the modified PDF generator
         dailyBreakdown: apiData.dailyBreakdown,
-        
-        // The PDF gen expects dailyData, but our API doesn't send this.
-        // We'll send an empty array and use dailyBreakdown in the PDF gen instead.
         dailyData: [], 
-
         monthlyData: {
           questions: apiData.monthlyQuestionAverages.map((q) => ({
-            name: q.questionText, // Rename
-            // Format numbers to 2 decimal places, keep 0 as "N/A"
+            name: q.questionText,
             averages: q.averages.map(avg => avg === 0 ? "N/A" : avg.toFixed(2)),
           })),
           composites: apiData.monthlyCompositeAverages.map((c) => ({
-            name: c.compositeName, // Rename
+            name: c.compositeName,
             averages: c.averages.map(avg => avg === 0 ? "N/A" : avg.toFixed(2)),
           })),
         },
-        
         yearlyData: {
           questions: apiData.yearlyQuestionAverages.map((q) => ({
-            name: q.questionText, // Rename
-            value: q.yearlyAverage, // Rename
+            name: q.questionText,
+            value: q.yearlyAverage,
           })),
           composites: apiData.yearlyCompositeAverages.map((c) => ({
-            name: c.compositeName, // Rename
-            value: c.yearlyAverage, // Rename
+            name: c.compositeName,
+            value: c.yearlyAverage,
           })),
         },
       };
 
-      // 3. Pass the correctly shaped data to the PDF generator
       generateYearlyReportPDF(transformedData, year, category);
 
       toast.success('Report downloaded successfully!', { id: toastId });
