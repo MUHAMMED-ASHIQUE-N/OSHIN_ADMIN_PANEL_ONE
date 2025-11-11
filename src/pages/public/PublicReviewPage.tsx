@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTokenStore } from "../../stores/tokenStore"; // Use token store
 import { useNavigate, useParams } from "react-router-dom";
-import logo from "../../assets/logo/logo_oshin.svg";
+// import logo from "../../assets/logo/logo_oshin.svg"; // Use generic logo
+
+// Removed unused Calicut and Wayanad logos
+import Calicut_logo from "../../assets/logo/Oshiln_logo_calicut.svg";
+import wayanad_logo from "../../assets/logo/oshin_wayanad_logo.svg";
+
 import toast from 'react-hot-toast';
-import {  ReviewPayload, useReviewStore } from "../../stores/reviewStore"; // Import types
+import { ReviewPayload, useReviewStore } from "../../stores/reviewStore"; // Import types
+import { useAuthStore } from "../../stores/authStore";
 
 // --- Reusable Components (Copied from ReviewPage) ---
 const DottedLineInput = ({ label, value, onChange }: { label: string; value: string; onChange: (val: string) => void }) => (
@@ -38,7 +44,7 @@ const YesNoBox = ({ name, value, checked, onChange, label }: { name: string; val
                 value={value}
                 checked={checked}
                 onChange={onChange}
-                className="appearance-none h-5 w-5 border border-primary rounded-full checked:bg-primary checked:border-primary cursor-pointer"
+                className="appearance-none h-5 w-5 border border-primary rounded-full border-primary checked:bg-primary checked:border-primary cursor-pointer"
             />
             <span>{label}</span>
         </label>
@@ -55,7 +61,8 @@ const PublicReviewPage: React.FC = () => {
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestRoom, setGuestRoom] = useState("");
-  const [guestEmail, setGuestEmail] = useState(""); // ✅ ADD THIS LINE
+  // ❌ REMOVED Email state
+  // const [guestEmail, setGuestEmail] = useState("");
   const [description, setDescription] = useState("");
 
   const {
@@ -67,21 +74,41 @@ const PublicReviewPage: React.FC = () => {
   } = useTokenStore();
   
   const {
-    questions, answers, yesNoAnswerText, // ✅ Get new text state
+    questions, answers, yesNoAnswerText,
     isSubmitting, isLoading: isQuestionsLoading,
-    fetchQuestions, setAnswer, setYesNoAnswerText, // ✅ Get new text action
+    fetchQuestions, setAnswer, setYesNoAnswerText,
     resetReview,
   } = useReviewStore();
 
+
+
+    const user = useAuthStore((state) => state.user);
+  
+  // ✅ STEP 2: Determine which logo to show (FIXED)
+      const logoToShow = useMemo(() => {
+          // Get the hotel name safely and convert to lowercase
+          // We need optional chaining on .toLowerCase() as well,
+          // in case 'name' itself is undefined (or the chain resolves to undefined).
+          const hotelName = user?.hotelId?.name?.toLowerCase(); // <-- THE FIX IS HERE
+  
+          if (hotelName?.includes("wayanad")) {
+              return wayanad_logo;
+          }
+  
+          // Default to Calicut logo if it's 'calicut' or if user/hotel is undefined
+          return Calicut_logo;
+  
+      }, [user]); // This will re-run only when the user object changes
+  
   // 1. Validate token on mount
   useEffect(() => {
-    resetReview(); // Reset answers from previous attempts
+    resetReview(); 
     if (token) {
       validateToken(token);
     } else {
       navigate('/login'); // No token
     }
-  }, [token, validateToken, navigate, resetReview]); // Added resetReview
+  }, [token, validateToken, navigate, resetReview]);
 
   // 2. Fetch questions AFTER token is validated
   useEffect(() => {
@@ -108,20 +135,13 @@ const handleSubmit = async () => {
         if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
         if (!guestRoom.trim()) { toast.error("Please enter the Guest Room number."); return; }
     }
-    // ✅ ADDED F&B/CFC VALIDATION
+    // 🔥 UPDATED Validation for F&B and CFC
     if (publicCategory === "f&b" || publicCategory === "cfc") {
-        if (!guestEmail.trim()) {
-            toast.error("Please enter the Guest Email.");
-            return;
-        }
-        if (!/\S+@\S+\.\S+/.test(guestEmail)) {
-           toast.error("Please enter a valid email address.");
-           return;
-        }
+        if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
+        if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
     }
     // --- End Validation ---
 
-    // ... (Your answersPayload logic is correct) ...
     const answersPayload = Object.keys(answers)
        .filter(questionId => answers[questionId] !== null && answers[questionId] !== undefined)
        .map(questionId => {
@@ -143,7 +163,7 @@ const handleSubmit = async () => {
        })
        .filter(Boolean) as ReviewPayload['answers'];
 
-    // ✅ Dynamically create the guestInfo payload
+    // Dynamically create the guestInfo payload
     const getGuestInfo = () => {
         if (publicCategory === 'room') {
             return {
@@ -152,20 +172,23 @@ const handleSubmit = async () => {
                 roomNumber: guestRoom.trim(),
             };
         }
+        // 🔥 UPDATED GuestInfo for F&B and CFC
         if (publicCategory === 'f&b' || publicCategory === 'cfc') {
             return {
-                email: guestEmail.trim(),
+                name: guestName.trim(),
+                phone: guestPhone.trim(),
+                // ❌ REMOVED email
             };
         }
         return undefined;
     };
 
-const payload: ReviewPayload = {
-    category: publicCategory,
-    answers: answersPayload,
-    description: description.trim(),
-    guestInfo: getGuestInfo(), // ✅ Correctly named 'guestInfo'
-};
+    const payload: ReviewPayload = {
+        category: publicCategory,
+        answers: answersPayload,
+        description: description.trim(),
+        guestInfo: getGuestInfo(),
+    };
 
     const success = await submitPublicReview(token, payload);
     if (success) {
@@ -173,8 +196,30 @@ const payload: ReviewPayload = {
         setPage("thankyou");
         resetReview();
     }
-    // Error is handled by publicError
-};
+  };
+
+  const welcomeText = useMemo(() => {
+        const hotelName = user?.hotelId?.name?.toLowerCase();
+        
+        // Determine the hotel base name
+        const isWayanad = hotelName?.includes("wayanad");
+        const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+
+        // Determine the suffix based on category
+        if (publicCategory === 'room') {
+            return `${hotelBase} Hotels and Resort`;
+        }
+        if (publicCategory === 'f&b' || publicCategory === 'cfc') {
+            // Using "Coffee Clatch" for both f&b and cfc as per your rules
+            return `${hotelBase} Coffee Klatch`;
+        }
+
+        // Fallback in case publicCategory is missing
+        return `${hotelBase} Hotels and Resort`; 
+
+    }, [user, publicCategory]); // Re-runs when user or category changes
+
+
   // --- Render Logic ---
   if (isPublicLoading || isQuestionsLoading) {
     return (
@@ -197,12 +242,12 @@ if (publicError && !isSubmitting) {
 
   // Thank you page
   if (page === "thankyou") {
-    return (
+     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
           <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
-          <p className="text-lg text-primary mb-8">  Looking forward to welcome you back Yet another Remarkable stay with Oshin Hotels & Resorts
+          <p className="text-lg text-primary mb-8">  Looking forward to welcome you back for yet another Remarkable stay with Oshin Hotels & Resorts
           </p>
           {/* No "Submit Another" button for public link */}
         </div>
@@ -214,29 +259,20 @@ if (publicError && !isSubmitting) {
     <div className="min-h-screen bg-gray-100 font-sans">
       <div className="max-w-4xl mx-auto bg-white min-h-screen shadow-2xl flex flex-col">
         <header className="flex items-center flex-col py-5 bg-primary text-white">
-          <img src={logo} alt="Oshin Logo" className="w-28" />
+          <img src={logoToShow} alt="Oshin Logo" className="w-28" />
           <div><h1 className="text-3xl font-light tracking-wider">Oshin Hotels & Resorts</h1></div>
         </header>
 
         <main className="p-8">
           {/* Intro Text */}
           <div className="mb-8 text-gray-700 space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-800">Dear Valued Guest:</h2>
-            <p>
-                Thank you for choosing Oshin Hotels & Resorts, we would greatly
-                appreciate you taking the time to complete a survey...
-            </p>
-            <p>
-                We appreciate your business and thank you for staying with the
-                Oshin Calicut. We invite you to share your thoughts, comments and
-                suggestions on your stay...
-            </p>
-            <p className="mt-4">
-                Sincere regards,<br /> Hotel Management </p>
-            <p className="font-semibold pt-4 border-t border-gray-200">
-              Please be sure to choose the option that best represents your opinion.
-            </p>
-          </div>
+                      <h2 className="text-2xl font-semibold text-gray-800">
+                          Dear Valued Guest:
+                      </h2>
+                      {/* ✅ FIXED: Use the new welcomeText variable */}
+                      <p className="font-semibold pt-4 border-t border-gray-200">Thank you for choosing <strong>{welcomeText}</strong>, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.</p>
+                      <p className="font-semibold pt-4 border-t border-gray-200"> Please be sure to choose the option that best represents your opinion. </p>
+                  </div>
 
           {/* Questions Table */}
           <div className="overflow-x-auto">
@@ -278,7 +314,7 @@ if (publicError && !isSubmitting) {
                     })}
                     <RadioBox
                       name={q._id} value="0"
-                      checked={answers[q._id] === 0}
+                       checked={answers[q._id] === 0}
                       onChange={() => setAnswer(q._id, 0)}
                     />
                   </tr>
@@ -288,13 +324,12 @@ if (publicError && !isSubmitting) {
             {yesNoQuestions.length > 0 && (
                 <tbody className="border-t-2 border-gray-200 mt-4 pt-4">
                   {yesNoQuestions.map((q) => (
-                    // ✅ Use React.Fragment to group row and text input row
                     <React.Fragment key={q._id}>
                       <tr className="align-middle border-t">
-                        <td className="py-2 pr-4 w-2/5">{q.text}</td>
+                             <td className="py-2 pr-4 w-2/5">{q.text}</td>
                         <YesNoBox
                           name={q._id} value="yes" label="YES"
-                          checked={answers[q._id] === true}
+                        checked={answers[q._id] === true}
                           onChange={() => setAnswer(q._id, true)}
                         />
                         <YesNoBox
@@ -306,7 +341,6 @@ if (publicError && !isSubmitting) {
                         <td></td>
                       </tr>
                       
-                      {/* ✅ UPDATED: Conditionally render text input row ONLY for f&b and cfc */}
                       {answers[q._id] === true && (publicCategory === "f&b" || publicCategory === "cfc") && (
                         <tr className="align-middle border-b">
                             <td className="py-2 pr-4 text-right italic text-gray-600">
@@ -320,7 +354,7 @@ if (publicError && !isSubmitting) {
                                     placeholder="Optional comment..."
                                     className="w-full text-sm p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                                 />
-                            </td>
+                               </td>
                         </tr>
                       )}
                     </React.Fragment>
@@ -330,7 +364,7 @@ if (publicError && !isSubmitting) {
             </table>
           </div>
 
-            
+          
 <section className="mt-6">
     <label className="text-sm font-medium text-gray-700 mb-2 block">
         Please tell us your overall experience and in particular any memorable experience or exceptional associate you have encountered during your stay (please be specific)
@@ -340,7 +374,7 @@ if (publicError && !isSubmitting) {
         onChange={(e) => setDescription(e.target.value)}
         rows={4}
         className="w-full mt-2 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-        placeholder="Any memorable experiences or exceptional associates..."
+      placeholder="Any memorable experiences or exceptional associates..."
     />
 </section>
 
@@ -373,18 +407,24 @@ if (publicError && !isSubmitting) {
         </div>
     )}
 
-    {/* === F&B or CFC GGUEST INFO === */}
+    {/* === F&B or CFC GUEST INFO === */}
+    {/* 🔥 UPDATED: Show Name and Phone for f&b and cfc */}
     {(publicCategory === "f&b" || publicCategory === "cfc") && (
         <div className="space-y-4">
             <DottedLineInput
-                label="Guest Email"
-                value={guestEmail}
-                onChange={setGuestEmail}
+                label="Guest Name"
+                value={guestName}
+                onChange={setGuestName}
+            />
+            <DottedLineInput
+                label="Phone"
+                value={guestPhone}
+                onChange={setGuestPhone}
             />
         </div>
     )}
 </section>
-          {/* ✅ END: Conditional Room-Only Section */}
+    {/* ✅ END: Conditional Room-Only Section */}
 
 
           {/* --- Submit Button --- */}

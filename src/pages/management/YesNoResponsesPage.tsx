@@ -189,7 +189,7 @@ const YesNoResponsesPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('cfc')}
             className={`py-2 px-6 text-base font-medium ${activeTab === 'cfc' ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}>
-            CFC Responses
+            CK Responses
           </button>
         </div>
       </div>

@@ -59,7 +59,8 @@ const ReviewPage: React.FC = () => {
     const [guestName, setGuestName] = useState("");
     const [guestPhone, setGuestPhone] = useState("");
     const [guestRoom, setGuestRoom] = useState("");
-    const [guestEmail, setGuestEmail] = useState(""); // ✅ ADDED Email state
+    // ❌ REMOVED Email state
+    // const [guestEmail, setGuestEmail] = useState(""); 
     const [description, setDescription] = useState("");
 
     const {
@@ -75,7 +76,7 @@ const ReviewPage: React.FC = () => {
         resetReview,
         error
     } = useReviewStore();
- const logout = useAuthStore((state) => state.logout);
+   const logout = useAuthStore((state) => state.logout);
     const user = useAuthStore((state) => state.user);
 
 // ✅ STEP 2: Determine which logo to show (FIXED)
@@ -93,6 +94,29 @@ const ReviewPage: React.FC = () => {
         return Calicut_logo;
 
     }, [user]); // This will re-run only when the user object changes
+
+    const welcomeText = useMemo(() => {
+        const hotelName = user?.hotelId?.name?.toLowerCase();
+        
+        // Determine the hotel base name
+        const isWayanad = hotelName?.includes("wayanad");
+        const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+
+        // Determine the suffix based on category
+        if (category === 'room') {
+            return `${hotelBase} Hotels and Resort`;
+        }
+        if (category === 'f&b' || category === 'cfc') {
+            // Using "Coffee Clatch" for both f&b and cfc as per your rules
+            return `${hotelBase} Coffee Klatch`;
+        }
+
+        // Fallback in case category is missing
+        return `${hotelBase} Hotels and Resort`; 
+
+    }, [user, category]); // Re-runs when user or category changes
+
+
     useEffect(() => {
         resetReview();
         if (category) {
@@ -105,7 +129,8 @@ const ReviewPage: React.FC = () => {
         setGuestName("");
         setGuestPhone("");
         setGuestRoom("");
-        setGuestEmail(""); // ✅ Reset email
+        // ❌ REMOVED email reset
+        // setGuestEmail(""); 
         setDescription("");
         setPage("review");
     }, [category, fetchQuestions, navigate, resetReview]);
@@ -127,15 +152,11 @@ const ReviewPage: React.FC = () => {
             if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
             if (!guestRoom.trim()) { toast.error("Please enter the Guest Room number."); return; }
         }
+        
+        // 🔥 UPDATED Validation for F&B and CFC
         if (category === "f&b" || category === "cfc") {
-            if (!guestEmail.trim()) {
-                toast.error("Please enter the Guest Email.");
-                return;
-            }
-            if (!/\S+@\S+\.\S+/.test(guestEmail)) {
-               toast.error("Please enter a valid email address.");
-               return;
-            }
+            if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
+            if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
         }
         // --- Validation End ---
 
@@ -171,14 +192,18 @@ const ReviewPage: React.FC = () => {
                     roomNumber: guestRoom.trim(),
                 };
             }
+            // 🔥 UPDATED GuestInfo for F&B and CFC
             if (category === 'f&b' || category === 'cfc') {
                 return {
-                    // User might still fill these fields before they were removed,
-                    // so we still check them here just in case.
-                    name: guestName.trim() || undefined, 
-                    phone: guestPhone.trim() || undefined, 
-                    roomNumber: guestRoom.trim() || undefined,
-                    email: guestEmail.trim(), // Send email
+                    name: guestName.trim(),
+                    phone: guestPhone.trim(),
+                    // ✅✅✅ START: FINAL WORKAROUND ✅✅✅
+                    // We have tried `null`, `''`, and omitting the key. All have failed.
+                    // This implies the backend validator is incorrectly REQUIRING
+                    // a non-empty string. We will send a placeholder "N/A"
+                    // to bypass this bug. This should be fixed in the backend.
+                    roomNumber: "N/A",
+                    // ✅✅✅ END: FINAL WORKAROUND ✅✅✅
                 };
             }
             return undefined;
@@ -239,7 +264,7 @@ const ReviewPage: React.FC = () => {
                     <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
                     <p className="text-lg text-primary mb-2">
-                        Looking forward to welcome you back Yet another Remarkable stay with Oshin Hotels & Resorts
+                        Looking forward to welcome you back for yet another Remarkable stay with Oshin Hotels & Resorts
                     </p>
                     <div className="h-[48px]"> {/* Placeholder */}
                         {showButton && (
@@ -274,7 +299,7 @@ const ReviewPage: React.FC = () => {
                         <h2 className="text-2xl font-semibold text-gray-800">
                             Dear Valued Guest:
                         </h2>
-                        {/* ... Intro text ... */}
+                        <p className="font-semibold pt-4 border-t border-gray-200">Thank you for choosing <strong>{welcomeText}</strong>, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.</p>
                         <p className="font-semibold pt-4 border-t border-gray-200"> Please be sure to choose the option that best represents your opinion. </p>
                     </div>
 
@@ -403,7 +428,7 @@ const ReviewPage: React.FC = () => {
                                 />
                                 <div className="flex flex-col md:flex-row gap-4">
                                     <DottedLineInput
-                                        label="Phone"
+                                        label="phone"
                                         value={guestPhone}
                                         onChange={setGuestPhone}
                                     />
@@ -417,13 +442,18 @@ const ReviewPage: React.FC = () => {
                         )}
 
                         {/* === F&B or CFC GUEST INFO === */}
-                        {/* ✅ UPDATED: Only showing Email input for f&b and cfc */}
+                        {/* 🔥 UPDATED: Show Name and Phone for f&b and cfc */}
                         {(category === "f&b" || category === "cfc") && (
                             <div className="space-y-4">
                                 <DottedLineInput
-                                    label="Guest Email"
-                                    value={guestEmail}
-                                    onChange={setGuestEmail}
+                                    label="Guest Name"
+                                    value={guestName}
+                                    onChange={setGuestName}
+                                />
+                                <DottedLineInput
+                                    label="phone"
+                                    value={guestPhone}
+                                    onChange={setGuestPhone}
                                 />
                             </div>
                         )}

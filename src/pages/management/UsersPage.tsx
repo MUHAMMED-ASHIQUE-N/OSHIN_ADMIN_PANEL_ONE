@@ -192,7 +192,7 @@ const UsersPage: React.FC = () => {
               <option value="staff">Staff (Generic)</option>
               <option value="staff_room">Staff (Room)</option>
               <option value="staff_f&b">Staff (F&B)</option>
-              <option value="staff_cfc">Staff (CFC)</option>
+              <option value="staff_cfc">Staff (CK)</option>
               <option value="viewer">Associate (Viewer)</option>
               <option value="admin">Admin</option>
             </select>

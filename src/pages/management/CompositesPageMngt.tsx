@@ -239,7 +239,7 @@ const CompositesPageMngt: React.FC = () => {
             onClick={() => setActiveTab('cfc')}
             className={getTabClassName('cfc')} // ✅ Cleaned up
           >
-            CFC
+            CK
           </button>
         </nav>
       </div>

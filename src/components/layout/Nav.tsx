@@ -50,7 +50,7 @@ function Nav({ category, setCategory }: NavProps) {
               category === 'cfc' ? 'bg-primary text-white shadow' : 'text-gray-700 hover:bg-gray-300'
             }`}
           >
-            CFC
+            CK
           </button>
         </div>
       )}

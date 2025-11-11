@@ -37,13 +37,13 @@ interface DynamicPieChartProps {
 
 const getColorByValue = (value: number) => {
     if (value <= 5) {
-        return '#DC2626'; // Danger Red (e.g., Tailwind Red-600)
+        return '#FF0000'; // Danger Red (e.g., Tailwind Red-600)
     }
     if (value <= 9) { // This automatically means value is > 5
-        return '#F59E0B'; // Orange (e.g., Tailwind Amber-500)
+        return '#F97316'; // Orange (e.g., Tailwind Amber-500)
     }
     // This means value is > 9 (e.g., 9.1 to 10)
-    return '#10B981'; // Green (e.g., Tailwind Emerald-500)
+    return '#22C55E'; // Green (e.g., Tailwind Emerald-500)
 };
 
 

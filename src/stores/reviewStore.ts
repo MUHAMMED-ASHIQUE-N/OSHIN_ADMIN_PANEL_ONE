@@ -1,4 +1,3 @@
-// src/stores/reviewStore.ts
 import { create } from 'zustand';
 import axios from 'axios';
 import { useAuthStore } from './authStore';
@@ -19,11 +18,11 @@ export interface AnswerPayload {
   answerText?: string; // For "Yes" answer details
 }
 
+// 🔥 UPDATED: Removed email
 export interface GuestInfoPayload {
   name?: string;
   phone?: string;
-  roomNumber?: string; // For Room or Table No.
-  email?: string;     // For f&b and cfc
+  roomNumber?: string; // For Room
 }
 export interface ReviewPayload {
   // ✅ ADDED 'cfc'

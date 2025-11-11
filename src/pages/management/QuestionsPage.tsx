@@ -210,7 +210,7 @@ const QuestionsPage: React.FC = () => {
             onClick={() => setActiveTab("cfc")}
             className={getTabClassName('cfc')}
           >
-            CFC
+            CK
           </button>
         </nav>
       </div>
