@@ -44,7 +44,7 @@ const YesNoBox = ({ name, value, checked, onChange, label }: { name: string; val
                 value={value}
                 checked={checked}
                 onChange={onChange}
-                className="appearance-none h-5 w-5 border border-primary rounded-full border-primary checked:bg-primary checked:border-primary cursor-pointer"
+                className="appearance-none h-5 w-5 border border-primary rounded-full  checked:bg-primary checked:border-primary cursor-pointer"
             />
             <span>{label}</span>
         </label>

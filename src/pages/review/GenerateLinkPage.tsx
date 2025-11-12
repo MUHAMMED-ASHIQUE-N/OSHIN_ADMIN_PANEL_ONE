@@ -22,7 +22,7 @@ const GenerateLinkPage: React.FC = () => {
 
   const getFullLink = () => {
     if (!generatedToken) return '';
-   return `${publicUrl}/api/public/review/${encodeURIComponent(generatedToken)}`;
+   return `${publicUrl}/public/review/${encodeURIComponent(generatedToken)}`;
   };
 
   const handleCopyToClipboard = () => {
