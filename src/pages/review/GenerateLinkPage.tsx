@@ -9,6 +9,7 @@ const GenerateLinkPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { generatedToken, isLoading, error, generateToken, clearToken } = useTokenStore();
+  const publicUrl = import.meta.env.VITE_PUBLIC_URL;
   //window
   useEffect(() => {
     clearToken();
@@ -21,7 +22,7 @@ const GenerateLinkPage: React.FC = () => {
 
   const getFullLink = () => {
     if (!generatedToken) return '';
-    return `${window.location.origin}/public/review/${encodeURIComponent(generatedToken)}`;
+   return `${publicUrl}/public/review/${encodeURIComponent(generatedToken)}`;
   };
 
   const handleCopyToClipboard = () => {
