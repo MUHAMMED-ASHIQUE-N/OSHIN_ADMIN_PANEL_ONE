@@ -117,6 +117,28 @@ const ReviewPage: React.FC = () => {
     }, [user, category]); // Re-runs when user or category changes
 
 
+         const thankyouNote = useMemo(() => {
+                const hotelName = user?.hotelId?.name?.toLowerCase();
+                
+                // Determine the hotel base name
+                const isWayanad = hotelName?.includes("wayanad");
+                const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+        
+                // Determine the suffix based on category
+                if (category === 'room' || category === 'f&b') {
+                    return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resort`;
+                }
+                if (category === 'cfc') {
+                    // Using "Coffee Clatch" for both f&b and cfc as per your rules
+                    return `for choosing ${hotelBase} Coffee Klatch , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+                }
+        
+                // Fallback in case category is missing
+                return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resor`; 
+        
+            }, [user, category]); // Re-runs when user or category changes
+        
+
     useEffect(() => {
         resetReview();
         if (category) {
@@ -264,7 +286,7 @@ const ReviewPage: React.FC = () => {
                     <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
                     <p className="text-lg text-primary mb-2">
-                        Looking forward to welcome you back for yet another Remarkable stay with {welcomeText}
+                       {thankyouNote}
                     </p>
                     <div className="h-[48px]"> {/* Placeholder */}
                         {showButton && (

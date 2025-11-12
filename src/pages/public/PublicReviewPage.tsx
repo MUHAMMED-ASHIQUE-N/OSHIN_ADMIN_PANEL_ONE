@@ -220,6 +220,34 @@ const handleSubmit = async () => {
     }, [user, publicCategory]); // Re-runs when user or category changes
 
 
+
+       const thankyouNote = useMemo(() => {
+        const hotelName = user?.hotelId?.name?.toLowerCase();
+        
+        // Determine the hotel base name
+        const isWayanad = hotelName?.includes("wayanad");
+        const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+
+        // Determine the suffix based on category
+        if (publicCategory === 'room' || publicCategory === 'f&b') {
+            return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resort`;
+        }
+
+        
+       
+
+        if ( publicCategory === 'cfc') {
+            // Using "Coffee Clatch" for both f&b and cfc as per your rules
+            return `for choosing ${hotelBase} Coffee Klatch , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+        }
+
+        // Fallback in case publicCategory is missing
+        return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resor`; 
+
+    }, [user, publicCategory]); // Re-runs when user or category changes
+
+
+
   // --- Render Logic ---
   if (isPublicLoading || isQuestionsLoading) {
     return (
@@ -247,7 +275,7 @@ if (publicError && !isSubmitting) {
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
           <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
-          <p className="text-lg text-primary mb-8">  Looking forward to welcome you back for yet another Remarkable stay with {welcomeText}
+          <p className="text-lg text-primary mb-8">  {thankyouNote}
           </p>
           {/* No "Submit Another" button for public link */}
         </div>
