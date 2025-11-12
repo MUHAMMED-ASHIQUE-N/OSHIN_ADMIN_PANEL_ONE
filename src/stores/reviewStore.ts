@@ -52,7 +52,11 @@ interface ReviewState {
 
 const getAuthHeader = () => {
   const token = useAuthStore.getState().token;
-  return { headers: { Authorization: `Bearer ${token}` } };
+  const headers: Record<string, string> = {}; // Start with empty headers object
+  if (token) { // Only add if token exists (not null/empty)
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return { headers }; // Always return { headers: { ... } } for axios config
 };
 
 export const useReviewStore = create<ReviewState>((set, get) => ({
