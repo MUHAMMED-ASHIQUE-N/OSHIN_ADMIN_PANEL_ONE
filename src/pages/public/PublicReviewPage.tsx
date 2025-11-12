@@ -204,18 +204,20 @@ const handleSubmit = async () => {
         // Determine the hotel base name
         const isWayanad = hotelName?.includes("wayanad");
         const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+        const coffeeKlatch = isWayanad ? "Wayanad" : "Calicut";
 
         // Determine the suffix based on category
-        if (publicCategory === 'room') {
-            return `${hotelBase} Hotels and Resort`;
+        if  (publicCategory === 'f&b' || publicCategory === 'room') {
+            return `Thank you for choosing ${hotelBase} Hotels and Resorts, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
         }
-        if (publicCategory === 'f&b' || publicCategory === 'cfc') {
+        if ( publicCategory === 'cfc') {
             // Using "Coffee Clatch" for both f&b and cfc as per your rules
-            return `${hotelBase} Coffee Klatch`;
+            return `Thank you for choosing Coffee Klatch ${coffeeKlatch} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.h`;
         }
 
         // Fallback in case publicCategory is missing
-        return `${hotelBase} Hotels and Resort`; 
+                   return `Thank you for choosing ${hotelBase} Hotels and Resorts, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+
 
     }, [user, publicCategory]); // Re-runs when user or category changes
 
@@ -227,6 +229,7 @@ const handleSubmit = async () => {
         // Determine the hotel base name
         const isWayanad = hotelName?.includes("wayanad");
         const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+        const coffeeKlatch = isWayanad ? "Wayanad" : "Calicut";
 
         // Determine the suffix based on category
         if (publicCategory === 'room' || publicCategory === 'f&b') {
@@ -238,7 +241,8 @@ const handleSubmit = async () => {
 
         if ( publicCategory === 'cfc') {
             // Using "Coffee Clatch" for both f&b and cfc as per your rules
-            return `for choosing ${hotelBase} Coffee Klatch , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+                              return `Looking forward to welcoming you back for yet another experience at Coffee Klatch ${coffeeKlatch}.`;
+
         }
 
         // Fallback in case publicCategory is missing
@@ -298,7 +302,7 @@ if (publicError && !isSubmitting) {
                           Dear Valued Guest:
                       </h2>
                       {/* ✅ FIXED: Use the new welcomeText variable */}
-                      <p className="font-semibold pt-4 border-t border-gray-200">Thank you for choosing <strong>{welcomeText}</strong>, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.</p>
+                       <p className="font-semibold pt-4 border-t border-gray-200">{welcomeText}</p>
                       <p className="font-semibold pt-4 border-t border-gray-200"> Please be sure to choose the option that best represents your opinion. </p>
                   </div>
 

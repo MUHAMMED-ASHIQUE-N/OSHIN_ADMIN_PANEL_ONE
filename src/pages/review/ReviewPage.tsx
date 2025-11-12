@@ -95,24 +95,26 @@ const ReviewPage: React.FC = () => {
 
     }, [user]); // This will re-run only when the user object changes
 
-    const welcomeText = useMemo(() => {
+   const welcomeText = useMemo(() => {
         const hotelName = user?.hotelId?.name?.toLowerCase();
         
         // Determine the hotel base name
         const isWayanad = hotelName?.includes("wayanad");
         const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+        const coffeeKlatch = isWayanad ? "Wayanad" : "Calicut";
 
         // Determine the suffix based on category
-        if (category === 'room') {
-            return `${hotelBase} Hotels and Resort`;
+        if  (category === 'f&b' || category === 'room') {
+            return `Thank you for choosing ${hotelBase} Hotels and Resorts, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
         }
-        if (category === 'f&b' || category === 'cfc') {
+        if ( category === 'cfc') {
             // Using "Coffee Clatch" for both f&b and cfc as per your rules
-            return `${hotelBase} Coffee Klatch`;
+            return `Thank you for choosing Coffee Klatch ${coffeeKlatch} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.h`;
         }
 
         // Fallback in case category is missing
-        return `${hotelBase} Hotels and Resort`; 
+                   return `Thank you for choosing ${hotelBase} Hotels and Resorts, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+
 
     }, [user, category]); // Re-runs when user or category changes
 
@@ -123,6 +125,7 @@ const ReviewPage: React.FC = () => {
                 // Determine the hotel base name
                 const isWayanad = hotelName?.includes("wayanad");
                 const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+        const coffeeKlatch = isWayanad ? "Wayanad" : "Calicut";
         
                 // Determine the suffix based on category
                 if (category === 'room' || category === 'f&b') {
@@ -130,11 +133,11 @@ const ReviewPage: React.FC = () => {
                 }
                 if (category === 'cfc') {
                     // Using "Coffee Clatch" for both f&b and cfc as per your rules
-                    return `for choosing ${hotelBase} Coffee Klatch , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+                    return `Looking forward to welcoming you back for yet another experience at Coffee Klatch ${coffeeKlatch}.`;
                 }
         
                 // Fallback in case category is missing
-                return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resor`; 
+                return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resort`; 
         
             }, [user, category]); // Re-runs when user or category changes
         
@@ -321,7 +324,7 @@ const ReviewPage: React.FC = () => {
                         <h2 className="text-2xl font-semibold text-gray-800">
                             Dear Valued Guest:
                         </h2>
-                        <p className="font-semibold pt-4 border-t border-gray-200">Thank you for choosing <strong>{welcomeText}</strong>, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.</p>
+                        <p className="font-semibold pt-4 border-t border-gray-200">{welcomeText}</p>
                         <p className="font-semibold pt-4 border-t border-gray-200"> Please be sure to choose the option that best represents your opinion. </p>
                     </div>
 
