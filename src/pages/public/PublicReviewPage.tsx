@@ -9,7 +9,7 @@ import wayanad_logo from "../../assets/logo/oshin_wayanad_logo.svg";
 
 import toast from "react-hot-toast";
 import { ReviewPayload, useReviewStore } from "../../stores/reviewStore"; // Import types
-import { useAuthStore } from "../../stores/authStore";
+// import { useAuthStore } from "../../stores/authStore";
 
 // --- Reusable Components (Copied from ReviewPage) ---
 const DottedLineInput = ({
