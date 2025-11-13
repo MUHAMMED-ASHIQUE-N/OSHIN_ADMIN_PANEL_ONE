@@ -323,7 +323,7 @@ const CompositesPageMngt: React.FC = () => {
               >
                 <option value="room">Room</option>
                 <option value="f&b">F&B</option>
-                <option value="cfc">CFC</option>
+                <option value="cfc">CK</option>
               </select>
               {editingComposite && <p className="text-xs text-gray-500 mt-1">Category cannot be changed after creation.</p>}
               <input type="hidden" name="category" value={modalCategory} />

@@ -100,20 +100,20 @@ const ReviewPage: React.FC = () => {
         
         // Determine the hotel base name
         const isWayanad = hotelName?.includes("wayanad");
-        const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
-        const coffeeKlatch = isWayanad ? "Wayanad" : "Calicut";
+        // const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+        const hotel = isWayanad ? "Wayanad" : "Calicut";
 
         // Determine the suffix based on category
         if  (category === 'f&b' || category === 'room') {
-            return `Thank you for choosing ${hotelBase} Hotels and Resorts, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+            return `Thank you for choosing Oshin Hotels and Resorts ${hotel} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
         }
         if ( category === 'cfc') {
             // Using "Coffee Clatch" for both f&b and cfc as per your rules
-            return `Thank you for choosing Coffee Klatch ${coffeeKlatch} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.h`;
+            return `Thank you for experiencing Coffee Klatch ${hotel} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
         }
 
         // Fallback in case category is missing
-                   return `Thank you for choosing ${hotelBase} Hotels and Resorts, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+                   return `Thank you for choosing Oshin Hotels and Resorts ${hotel} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
 
 
     }, [user, category]); // Re-runs when user or category changes
@@ -124,20 +124,20 @@ const ReviewPage: React.FC = () => {
                 
                 // Determine the hotel base name
                 const isWayanad = hotelName?.includes("wayanad");
-                const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
-        const coffeeKlatch = isWayanad ? "Wayanad" : "Calicut";
+                // const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
+        const hotel = isWayanad ? "Wayanad" : "Calicut";
         
                 // Determine the suffix based on category
                 if (category === 'room' || category === 'f&b') {
-                    return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resort`;
+                    return `Looking forward to welcome you back for yet another Remarkable stay with Oshin Hotels and Resorts ${hotel}`;
                 }
                 if (category === 'cfc') {
                     // Using "Coffee Clatch" for both f&b and cfc as per your rules
-                    return `Looking forward to welcoming you back for yet another experience at Coffee Klatch ${coffeeKlatch}.`;
+                    return `Looking forward to welcoming you back for yet another experience at Coffee Klatch ${hotel}.`;
                 }
         
                 // Fallback in case category is missing
-                return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resort`; 
+                return `Looking forward to welcome you back for yet another Remarkable stay with Oshin Hotels and Resort ${hotel}`; 
         
             }, [user, category]); // Re-runs when user or category changes
         

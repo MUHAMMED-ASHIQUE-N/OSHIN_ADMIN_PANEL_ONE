@@ -79,7 +79,7 @@ const LowRatedQuestionsPage: React.FC = () => {
         <div className="flex border-b border-gray-300 px-4">
           <TabButton category="room" label="Room" />
           <TabButton category="f&b" label="Food & Beverage" />
-          <TabButton category="cfc" label="Coffee Clatch" />
+          <TabButton category="cfc" label="Coffee Klatch" />
         </div>
 
         {/* Tab Panel */}

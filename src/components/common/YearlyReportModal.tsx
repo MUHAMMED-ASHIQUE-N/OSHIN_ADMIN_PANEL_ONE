@@ -86,7 +86,7 @@ const YearlyReportModal = () => {
             <option value="room">Room</option>
             <option value="f&b">Food & Beverage (F&B)</option>
             {/* ✅ ADDED: New option for CFC */}
-            <option value="cfc">Coffee Clatch (CFC)</option>
+            <option value="cfc">Coffee Klatch (CK)</option>
           </select>
         </div>
 

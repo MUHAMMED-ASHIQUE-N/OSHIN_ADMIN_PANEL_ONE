@@ -89,6 +89,9 @@ const IndexRedirect: React.FC = () => {
 };
 
 function App() {
+
+  
+
   return (
     <ChartProvider>
       <Toaster position="top-center" reverseOrder={false} />

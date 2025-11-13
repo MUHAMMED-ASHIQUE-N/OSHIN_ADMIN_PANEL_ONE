@@ -290,7 +290,7 @@ const QuestionsPage: React.FC = () => {
               >
                 <option value="room">Room</option>
                 <option value="f&b">F&B</option>
-                <option value="cfc">CFC</option>
+                <option value="cfc">CK</option>
               </select>
             </div>
 

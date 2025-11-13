@@ -41,7 +41,7 @@ const CategorySelectionModal: React.FC<CategorySelectionModalProps> = ({ isOpen,
             className="flex-1 flex flex-col items-center justify-center gap-4 p-6 bg-primary text-white rounded-lg shadow-lg hover:bg-opacity-90 transition-all" // Adjusted padding
           >
             <Coffee size={48} />
-            <span className="text-xl font-semibold">Coffee Clatch</span>
+            <span className="text-xl font-semibold">Coffee Klatch</span>
           </button>
         </div>
       </div>

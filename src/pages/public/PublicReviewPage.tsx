@@ -7,48 +7,80 @@ import { useNavigate, useParams } from "react-router-dom";
 import Calicut_logo from "../../assets/logo/Oshiln_logo_calicut.svg";
 import wayanad_logo from "../../assets/logo/oshin_wayanad_logo.svg";
 
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import { ReviewPayload, useReviewStore } from "../../stores/reviewStore"; // Import types
 import { useAuthStore } from "../../stores/authStore";
 
 // --- Reusable Components (Copied from ReviewPage) ---
-const DottedLineInput = ({ label, value, onChange }: { label: string; value: string; onChange: (val: string) => void }) => (
-    <div className="flex items-baseline space-x-2 w-full">
-        <label className="text-sm text-gray-800 whitespace-nowrap font-medium">{label}:</label>
-        <input
-            type="text"
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            className="w-full border-b border-dotted border-gray-500 focus:outline-none focus:border-solid focus:border-primary"
-        />
-    </div>
+const DottedLineInput = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+}) => (
+  <div className="flex items-baseline space-x-2 w-full">
+    <label className="text-sm text-gray-800 whitespace-nowrap font-medium">
+      {label}:
+    </label>
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full border-b border-dotted border-gray-500 focus:outline-none focus:border-solid focus:border-primary"
+    />
+  </div>
 );
-const RadioBox = ({ name, value, checked, onChange }: { name: string; value: string; checked: boolean; onChange: () => void }) => (
-    <td className="text-center py-2">
-        <input
-            type="radio"
-            name={name}
-            value={value}
-            checked={checked}
-            onChange={onChange}
-            className="appearance-none h-5 w-5 rounded-full border border-primary checked:bg-primary checked:border-primary cursor-pointer"
-        />
-    </td>
+const RadioBox = ({
+  name,
+  value,
+  checked,
+  onChange,
+}: {
+  name: string;
+  value: string;
+  checked: boolean;
+  onChange: () => void;
+}) => (
+  <td className="text-center py-2">
+    <input
+      type="radio"
+      name={name}
+      value={value}
+      checked={checked}
+      onChange={onChange}
+      className="appearance-none h-5 w-5 rounded-full border border-primary checked:bg-primary checked:border-primary cursor-pointer"
+    />
+  </td>
 );
-const YesNoBox = ({ name, value, checked, onChange, label }: { name: string; value: string; checked: boolean; onChange: () => void; label: string }) => (
-    <td colSpan={3} className="py-2">
-        <label className="flex items-center justify-center space-x-2 cursor-pointer">
-            <input
-                type="radio"
-                name={name}
-                value={value}
-                checked={checked}
-                onChange={onChange}
-                className="appearance-none h-5 w-5 border border-primary rounded-full  checked:bg-primary checked:border-primary cursor-pointer"
-            />
-            <span>{label}</span>
-        </label>
-    </td>
+const YesNoBox = ({
+  name,
+  value,
+  checked,
+  onChange,
+  label,
+}: {
+  name: string;
+  value: string;
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+}) => (
+  <td colSpan={3} className="py-2">
+    <label className="flex items-center justify-center space-x-2 cursor-pointer">
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        onChange={onChange}
+        className="appearance-none h-5 w-5 border border-primary rounded-full  checked:bg-primary checked:border-primary cursor-pointer"
+      />
+      <span>{label}</span>
+    </label>
+  </td>
 );
 // --- End Reusable Components ---
 
@@ -65,48 +97,52 @@ const PublicReviewPage: React.FC = () => {
   // const [guestEmail, setGuestEmail] = useState("");
   const [description, setDescription] = useState("");
 
+  // UPDATED: Destructure publicHotelId from tokenStore (NEW: for logo/hotel name on public page)
   const {
     publicCategory,
+    publicHotelId, // NEW: Use this instead of user.hotelId
     isPublicLoading,
     publicError,
     validateToken,
-    submitPublicReview
+    submitPublicReview,
   } = useTokenStore();
-  
+
   const {
-    questions, answers, yesNoAnswerText,
-    isSubmitting, isLoading: isQuestionsLoading,
-    fetchQuestions, setAnswer, setYesNoAnswerText,
+    questions,
+    answers,
+    yesNoAnswerText,
+    isSubmitting,
+    isLoading: isQuestionsLoading,
+    fetchQuestions,
+    setAnswer,
+    setYesNoAnswerText,
     resetReview,
   } = useReviewStore();
 
+  // REMOVED: const user = useAuthStore((state) => state.user); // No longer needed for public page
 
+  // UPDATED: Determine which logo to show (FIXED: Use publicHotelId from token instead of user)
+  const logoToShow = useMemo(() => {
+    // Get the hotel name safely and convert to lowercase
+    // We need optional chaining on .toLowerCase() as well,
+    // in case 'name' itself is undefined (or the chain resolves to undefined).
+    const hotelName = publicHotelId?.name?.toLowerCase(); // <-- THE FIX: Use publicHotelId
 
-    const user = useAuthStore((state) => state.user);
-  
-  // ✅ STEP 2: Determine which logo to show (FIXED)
-      const logoToShow = useMemo(() => {
-          // Get the hotel name safely and convert to lowercase
-          // We need optional chaining on .toLowerCase() as well,
-          // in case 'name' itself is undefined (or the chain resolves to undefined).
-          const hotelName = user?.hotelId?.name?.toLowerCase(); // <-- THE FIX IS HERE
-  
-          if (hotelName?.includes("wayanad")) {
-              return wayanad_logo;
-          }
-  
-          // Default to Calicut logo if it's 'calicut' or if user/hotel is undefined
-          return Calicut_logo;
-  
-      }, [user]); // This will re-run only when the user object changes
-  
+    if (hotelName?.includes("wayanad")) {
+      return wayanad_logo;
+    }
+
+    // Default to Calicut logo if it's 'calicut' or if hotel is undefined
+    return Calicut_logo;
+  }, [publicHotelId]); // UPDATED: Depend on publicHotelId instead of user
+
   // 1. Validate token on mount
   useEffect(() => {
-    resetReview(); 
+    resetReview();
     if (token) {
       validateToken(token);
     } else {
-      navigate('/login'); // No token
+      navigate("/login"); // No token
     }
   }, [token, validateToken, navigate, resetReview]);
 
@@ -126,161 +162,186 @@ const PublicReviewPage: React.FC = () => {
   }, [questions]);
 
   // 4. Handle Submit
-const handleSubmit = async () => {
+  const handleSubmit = async () => {
     if (!publicCategory || !token) return;
 
     // --- Validation ---
     if (publicCategory === "room") {
-        if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
-        if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
-        if (!guestRoom.trim()) { toast.error("Please enter the Guest Room number."); return; }
+      if (!guestName.trim()) {
+        toast.error("Please enter the Guest Name.");
+        return;
+      }
+      if (!guestPhone.trim()) {
+        toast.error("Please enter the Guest Phone number.");
+        return;
+      }
+      if (!guestRoom.trim()) {
+        toast.error("Please enter the Guest Room number.");
+        return;
+      }
     }
     // 🔥 UPDATED Validation for F&B and CFC
     if (publicCategory === "f&b" || publicCategory === "cfc") {
-        if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
-        if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
+      if (!guestName.trim()) {
+        toast.error("Please enter the Guest Name.");
+        return;
+      }
+      if (!guestPhone.trim()) {
+        toast.error("Please enter the Guest Phone number.");
+        return;
+      }
     }
     // --- End Validation ---
 
     const answersPayload = Object.keys(answers)
-       .filter(questionId => answers[questionId] !== null && answers[questionId] !== undefined)
-       .map(questionId => {
-           const question = questions.find(q => q._id === questionId);
-           const answer = answers[questionId];
+      .filter(
+        (questionId) =>
+          answers[questionId] !== null && answers[questionId] !== undefined
+      )
+      .map((questionId) => {
+        const question = questions.find((q) => q._id === questionId);
+        const answer = answers[questionId];
 
-           if (question?.questionType === "rating") {
-               return { question: questionId, rating: answer as number };
-           }
-           if (question?.questionType === "yes_no") {
-               const text = yesNoAnswerText[questionId];
-               return {
-                   question: questionId,
-                   answerBoolean: answer as boolean,
-                   answerText: answer === true ? text : undefined 
-               };
-           }
-           return null;
-       })
-       .filter(Boolean) as ReviewPayload['answers'];
+        if (question?.questionType === "rating") {
+          return { question: questionId, rating: answer as number };
+        }
+        if (question?.questionType === "yes_no") {
+          const text = yesNoAnswerText[questionId];
+          return {
+            question: questionId,
+            answerBoolean: answer as boolean,
+            answerText: answer === true ? text : undefined,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) as ReviewPayload["answers"];
 
     // Dynamically create the guestInfo payload
     const getGuestInfo = () => {
-        if (publicCategory === 'room') {
-            return {
-                name: guestName.trim(),
-                phone: guestPhone.trim(),
-                roomNumber: guestRoom.trim(),
-            };
-        }
-        // 🔥 UPDATED GuestInfo for F&B and CFC
-        if (publicCategory === 'f&b' || publicCategory === 'cfc') {
-            return {
-                name: guestName.trim(),
-                phone: guestPhone.trim(),
-                // ❌ REMOVED email
-            };
-        }
-        return undefined;
+      if (publicCategory === "room") {
+        return {
+          name: guestName.trim(),
+          phone: guestPhone.trim(),
+          roomNumber: guestRoom.trim(),
+        };
+      }
+      // 🔥 UPDATED GuestInfo for F&B and CFC
+      if (publicCategory === "f&b" || publicCategory === "cfc") {
+        return {
+          name: guestName.trim(),
+          phone: guestPhone.trim(),
+          // ❌ REMOVED email
+        };
+      }
+      return undefined;
     };
 
     const payload: ReviewPayload = {
-        category: publicCategory,
-        answers: answersPayload,
-        description: description.trim(),
-        guestInfo: getGuestInfo(),
+      category: publicCategory,
+      answers: answersPayload,
+      description: description.trim(),
+      guestInfo: getGuestInfo(),
     };
 
     const success = await submitPublicReview(token, payload);
     if (success) {
-        toast.success('Feedback submitted successfully!');
-        setPage("thankyou");
-        resetReview();
+      toast.success("Feedback submitted successfully!");
+      setPage("thankyou");
+      resetReview();
     }
   };
 
+  // UPDATED: welcomeText (FIX: Use publicHotelId instead of user)
   const welcomeText = useMemo(() => {
-        const hotelName = user?.hotelId?.name?.toLowerCase();
-        
-        // Determine the hotel base name
-        const isWayanad = hotelName?.includes("wayanad");
-        const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
-        const coffeeKlatch = isWayanad ? "Wayanad" : "Calicut";
+    const hotelName = publicHotelId?.name?.toLowerCase(); // <-- THE FIX: Use publicHotelId
 
-        // Determine the suffix based on category
-        if  (publicCategory === 'f&b' || publicCategory === 'room') {
-            return `Thank you for choosing ${hotelBase} Hotels and Resorts, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
-        }
-        if ( publicCategory === 'cfc') {
-            // Using "Coffee Clatch" for both f&b and cfc as per your rules
-            return `Thank you for choosing Coffee Klatch ${coffeeKlatch} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.h`;
-        }
+    // Determine the hotel base name
+    const isWayanad = hotelName?.includes("wayanad");
+    const hotel = isWayanad ? "Wayanad" : "Calicut";
 
-        // Fallback in case publicCategory is missing
-                   return `Thank you for choosing ${hotelBase} Hotels and Resorts, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+    // Determine the suffix based on category
+    if (publicCategory === "f&b" || publicCategory === "room") {
+      return `Thank you for choosing Oshin Hotels and Resorts ${hotel} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+    }
+    if (publicCategory === "cfc") {
+      // Using "Coffee Clatch" for both f&b and cfc as per your rules
+      return `Thank you for experiencing Coffee Klatch ${hotel} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+    }
 
+    // Fallback in case publicCategory is missing
+    return `Thank you for choosing Oshin Hotels and Resorts ${hotel}, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+  }, [publicHotelId, publicCategory]); // UPDATED: Depend on publicHotelId instead of user
 
-    }, [user, publicCategory]); // Re-runs when user or category changes
+  // UPDATED: thankyouNote (FIX: Use publicHotelId instead of user)
+  const thankyouNote = useMemo(() => {
+    const hotelName = publicHotelId?.name?.toLowerCase(); // <-- THE FIX: Use publicHotelId
 
+    // Determine the hotel base name
+    const isWayanad = hotelName?.includes("wayanad");
+    const hotel = isWayanad ? "Wayanad" : "Calicut";
 
+    // Determine the suffix based on category
+    if (publicCategory === "room" || publicCategory === "f&b") {
+      return `Looking forward to welcome you back for yet another Remarkable stay with Oshin Hotels and Resort ${hotel}`;
+    }
 
-       const thankyouNote = useMemo(() => {
-        const hotelName = user?.hotelId?.name?.toLowerCase();
-        
-        // Determine the hotel base name
-        const isWayanad = hotelName?.includes("wayanad");
-        const hotelBase = isWayanad ? "Oshin Wayanad" : "Oshin Calicut";
-        const coffeeKlatch = isWayanad ? "Wayanad" : "Calicut";
+    if (publicCategory === "cfc") {
+      // Using "Coffee Clatch" for both f&b and cfc as per your rules
+      return `Looking forward to welcoming you back for yet another experience at Coffee Klatch ${hotel}.`;
+    }
 
-        // Determine the suffix based on category
-        if (publicCategory === 'room' || publicCategory === 'f&b') {
-            return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resort`;
-        }
-
-        
-       
-
-        if ( publicCategory === 'cfc') {
-            // Using "Coffee Clatch" for both f&b and cfc as per your rules
-                              return `Looking forward to welcoming you back for yet another experience at Coffee Klatch ${coffeeKlatch}.`;
-
-        }
-
-        // Fallback in case publicCategory is missing
-        return `Looking forward to welcome you back for yet another Remarkable stay with ${hotelBase} Hotels and Resor`; 
-
-    }, [user, publicCategory]); // Re-runs when user or category changes
-
-
+    // Fallback in case publicCategory is missing
+    return `Looking forward to welcome you back for yet another Remarkable stay with Oshin Hotels and Resort ${hotel}`;
+  }, [publicHotelId, publicCategory]); // UPDATED: Depend on publicHotelId instead of user
 
   // --- Render Logic ---
   if (isPublicLoading || isQuestionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl text-primary animate-pulse">Loading Review Form...</p>
+        <p className="text-xl text-primary animate-pulse">
+          Loading Review Form...
+        </p>
       </div>
     );
   }
 
-if (publicError && !isSubmitting) {
-     return (
-       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-           <h2 className="text-3xl font-semibold text-red-600 mb-4">Link Invalid</h2>
-           <p className="text-lg text-gray-700 mb-8">{publicError}</p>
-         </div>
-       </div>
-     );
+  if (publicError && !isSubmitting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+          <h2 className="text-3xl font-semibold text-red-600 mb-4">
+            Link Invalid
+          </h2>
+          <p className="text-lg text-gray-700 mb-8">{publicError}</p>
+        </div>
+      </div>
+    );
   }
 
   // Thank you page
   if (page === "thankyou") {
-     return (
+    return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-          <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          <h2 className="text-3xl font-semibold text-primary mb-4">Thank You!</h2>
-          <p className="text-lg text-primary mb-8">  {thankyouNote}
-          </p>
+          <svg
+            className="w-16 h-16 mx-auto text-green-500 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <h2 className="text-3xl font-semibold text-primary mb-4">
+            Thank You!
+          </h2>
+          <p className="text-lg text-primary mb-8"> {thankyouNote}</p>
           {/* No "Submit Another" button for public link */}
         </div>
       </div>
@@ -292,19 +353,29 @@ if (publicError && !isSubmitting) {
       <div className="max-w-4xl mx-auto bg-white min-h-screen shadow-2xl flex flex-col">
         <header className="flex items-center flex-col py-5 bg-primary text-white">
           <img src={logoToShow} alt="Oshin Logo" className="w-28" />
-          <div><h1 className="text-3xl font-light tracking-wider">Oshin Hotels & Resorts</h1></div>
+          <div>
+            <h1 className="text-3xl font-light tracking-wider">
+              Oshin Hotels & Resorts
+            </h1>
+          </div>
         </header>
 
         <main className="p-8">
           {/* Intro Text */}
           <div className="mb-8 text-gray-700 space-y-4">
-                      <h2 className="text-2xl font-semibold text-gray-800">
-                          Dear Valued Guest:
-                      </h2>
-                      {/* ✅ FIXED: Use the new welcomeText variable */}
-                       <p className="font-semibold pt-4 border-t border-gray-200">{welcomeText}</p>
-                      <p className="font-semibold pt-4 border-t border-gray-200"> Please be sure to choose the option that best represents your opinion. </p>
-                  </div>
+            <h2 className="text-2xl font-semibold text-gray-800">
+              Dear Valued Guest:
+            </h2>
+            {/* ✅ FIXED: Use the new welcomeText variable */}
+            <p className="font-semibold pt-4 border-t border-gray-200">
+              {welcomeText}
+            </p>
+            <p className="font-semibold pt-4 border-t border-gray-200">
+              {" "}
+              Please be sure to choose the option that best represents your
+              opinion.{" "}
+            </p>
+          </div>
 
           {/* Questions Table */}
           <div className="overflow-x-auto">
@@ -315,16 +386,35 @@ if (publicError && !isSubmitting) {
                   <th className="w-2/5"></th>
                   <th colSpan={10} className="py-2">
                     <div className="flex items-center justify-between w-full">
-                      <span className="font-bold text-gray-600">Outstanding</span>
-                      <span className="font-bold text-gray-600">Unacceptable</span>
+                      <span className="font-bold text-gray-600">
+                        Outstanding
+                      </span>
+                      <span className="font-bold text-gray-600">
+                        Unacceptable
+                      </span>
                     </div>
                   </th>
                   <th className="w-[4%]"></th>
                 </tr>
                 <tr className=" font-semibold text-gray-600">
-                  <th className="pb-2 w-2/5 text-left">Please rate your experience</th>
-                  {["10", "09", "08", "07", "06", "05", "04", "03", "02", "01"].map((num) => (
-                    <th key={num} className="pb-2 font-medium w-[4%]">{num}</th>
+                  <th className="pb-2 w-2/5 text-left">
+                    Please rate your experience
+                  </th>
+                  {[
+                    "10",
+                    "09",
+                    "08",
+                    "07",
+                    "06",
+                    "05",
+                    "04",
+                    "03",
+                    "02",
+                    "01",
+                  ].map((num) => (
+                    <th key={num} className="pb-2 font-medium w-[4%]">
+                      {num}
+                    </th>
                   ))}
                   <th className="pb-2 font-medium w-[4%] text-center">N/A</th>
                 </tr>
@@ -338,57 +428,68 @@ if (publicError && !isSubmitting) {
                       const ratingValue = 10 - j;
                       return (
                         <RadioBox
-                          key={j} name={q._id} value={`${ratingValue}`}
+                          key={j}
+                          name={q._id}
+                          value={`${ratingValue}`}
                           checked={answers[q._id] === ratingValue}
                           onChange={() => setAnswer(q._id, ratingValue)}
                         />
                       );
                     })}
                     <RadioBox
-                      name={q._id} value="0"
-                       checked={answers[q._id] === 0}
+                      name={q._id}
+                      value="0"
+                      checked={answers[q._id] === 0}
                       onChange={() => setAnswer(q._id, 0)}
                     />
                   </tr>
                 ))}
               </tbody>
               {/* Yes/No Questions Body */}
-            {yesNoQuestions.length > 0 && (
+              {yesNoQuestions.length > 0 && (
                 <tbody className="border-t-2 border-gray-200 mt-4 pt-4">
                   {yesNoQuestions.map((q) => (
                     <React.Fragment key={q._id}>
                       <tr className="align-middle border-t">
-                             <td className="py-2 pr-4 w-2/5">{q.text}</td>
+                        <td className="py-2 pr-4 w-2/5">{q.text}</td>
                         <YesNoBox
-                          name={q._id} value="yes" label="YES"
-                        checked={answers[q._id] === true}
+                          name={q._id}
+                          value="yes"
+                          label="YES"
+                          checked={answers[q._id] === true}
                           onChange={() => setAnswer(q._id, true)}
                         />
                         <YesNoBox
-                          name={q._id} value="no" label="NO"
+                          name={q._id}
+                          value="no"
+                          label="NO"
                           checked={answers[q._id] === false}
                           onChange={() => setAnswer(q._id, false)}
                         />
                         <td colSpan={4}></td>
                         <td></td>
                       </tr>
-                      
-                      {answers[q._id] === true && (publicCategory === "f&b" || publicCategory === "cfc") && (
-                        <tr className="align-middle border-b">
+
+                      {answers[q._id] === true &&
+                        (publicCategory === "f&b" ||
+                          publicCategory === "cfc") && (
+                          <tr className="align-middle border-b">
                             <td className="py-2 pr-4 text-right italic text-gray-600">
-                                Please specify:
+                              Please specify:
                             </td>
                             <td colSpan={11} className="py-2">
-                                <input
-                                    type="text"
-                                    value={yesNoAnswerText[q._id] || ''}
-                                    onChange={(e) => setYesNoAnswerText(q._id, e.target.value)}
-                                    placeholder="Optional comment..."
-                                    className="w-full text-sm p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
-                               </td>
-                        </tr>
-                      )}
+                              <input
+                                type="text"
+                                value={yesNoAnswerText[q._id] || ""}
+                                onChange={(e) =>
+                                  setYesNoAnswerText(q._id, e.target.value)
+                                }
+                                placeholder="Optional comment..."
+                                className="w-full text-sm p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                              />
+                            </td>
+                          </tr>
+                        )}
                     </React.Fragment>
                   ))}
                 </tbody>
@@ -396,68 +497,68 @@ if (publicError && !isSubmitting) {
             </table>
           </div>
 
-          
-<section className="mt-6">
-    <label className="text-sm font-medium text-gray-700 mb-2 block">
-        Please tell us your overall experience and in particular any memorable experience or exceptional associate you have encountered during your stay (please be specific)
-    </label>
-    <textarea
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={4}
-        className="w-full mt-2 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-      placeholder="Any memorable experiences or exceptional associates..."
-    />
-</section>
-
-{/* --- Guest Info Section (Now Conditional) --- */}
-<section className="mt-6 p-4 border rounded-lg bg-gray-50">
-    <h3 className="text-lg font-semibold text-primary mb-4">
-        Guest Information
-    </h3>
-
-    {/* === ROOM GUEST INFO === */}
-    {publicCategory === "room" && (
-        <div className="space-y-4">
-             <DottedLineInput
-                label="Guest Name"
-                value={guestName}
-                onChange={setGuestName}
+          <section className="mt-6">
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              Please tell us your overall experience and in particular any
+              memorable experience or exceptional associate you have encountered
+              during your stay (please be specific)
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              className="w-full mt-2 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Any memorable experiences or exceptional associates..."
             />
-            <div className="flex flex-col md:flex-row gap-4">
+          </section>
+
+          {/* --- Guest Info Section (Now Conditional) --- */}
+          <section className="mt-6 p-4 border rounded-lg bg-gray-50">
+            <h3 className="text-lg font-semibold text-primary mb-4">
+              Guest Information
+            </h3>
+
+            {/* === ROOM GUEST INFO === */}
+            {publicCategory === "room" && (
+              <div className="space-y-4">
                 <DottedLineInput
+                  label="Guest Name"
+                  value={guestName}
+                  onChange={setGuestName}
+                />
+                <div className="flex flex-col md:flex-row gap-4">
+                  <DottedLineInput
                     label="Phone"
                     value={guestPhone}
                     onChange={setGuestPhone}
-                />
-                <DottedLineInput
+                  />
+                  <DottedLineInput
                     label="Room No"
                     value={guestRoom}
                     onChange={setGuestRoom}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* === F&B or CFC GUEST INFO === */}
+            {/* 🔥 UPDATED: Show Name and Phone for f&b and cfc */}
+            {(publicCategory === "f&b" || publicCategory === "cfc") && (
+              <div className="space-y-4">
+                <DottedLineInput
+                  label="Guest Name"
+                  value={guestName}
+                  onChange={setGuestName}
                 />
-            </div>
-        </div>
-    )}
-
-    {/* === F&B or CFC GUEST INFO === */}
-    {/* 🔥 UPDATED: Show Name and Phone for f&b and cfc */}
-    {(publicCategory === "f&b" || publicCategory === "cfc") && (
-        <div className="space-y-4">
-            <DottedLineInput
-                label="Guest Name"
-                value={guestName}
-                onChange={setGuestName}
-            />
-            <DottedLineInput
-                label="Phone"
-                value={guestPhone}
-                onChange={setGuestPhone}
-            />
-        </div>
-    )}
-</section>
-    {/* ✅ END: Conditional Room-Only Section */}
-
+                <DottedLineInput
+                  label="Phone"
+                  value={guestPhone}
+                  onChange={setGuestPhone}
+                />
+              </div>
+            )}
+          </section>
+          {/* ✅ END: Conditional Room-Only Section */}
 
           {/* --- Submit Button --- */}
           <div className="mt-8 text-center">
@@ -468,9 +569,7 @@ if (publicError && !isSubmitting) {
             >
               {isSubmitting ? "Submitting..." : "Submit Feedback"}
             </button>
-            {publicError && (
-              <p className="text-red-500 mt-2">{publicError}</p>
-            )}
+            {publicError && <p className="text-red-500 mt-2">{publicError}</p>}
           </div>
         </main>
       </div>
