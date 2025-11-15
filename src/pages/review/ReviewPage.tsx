@@ -168,21 +168,36 @@ const ReviewPage: React.FC = () => {
     }, [questions]);
 
     // ✅ REPLACED handleSubmit with the full logic
-    const handleSubmit = async () => {
-        if (!category) return;
+   const handleSubmit = async () => {
+        if (!category) return;
 
-        // --- Validation Start ---
-        if (category === "room") {
-            if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
-            if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
-            if (!guestRoom.trim()) { toast.error("Please enter the Guest Room number."); return; }
-        }
-        
-        // 🔥 UPDATED Validation for F&B and CFC
-        if (category === "f&b" || category === "cfc") {
-            if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
-            if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
-        }
+        // --- Validation Start ---
+        if (category === "room") {
+            if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
+            if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
+            if (!guestRoom.trim()) { toast.error("Please enter the Guest Room number."); return; }
+        }
+        
+        // 🔥 UPDATED Validation for F&B and CFC
+        if (category === "f&b" || category === "cfc") {
+            if (!guestName.trim()) { toast.error("Please enter the Guest Name."); return; }
+            if (!guestPhone.trim()) { toast.error("Please enter the Guest Phone number."); return; }
+
+            // ✅ --- NEW VALIDATION FOR CFC REFERRAL QUESTION ---
+            if (category === "cfc") {
+                const referralQuestion = questions.find(q => 
+                    q.questionType === 'yes_no' && 
+                    q.text.toLowerCase().includes("how did you hear about us")
+                );
+                
+                // Check if the question exists and if an answer has NOT been selected
+                if (referralQuestion && answers[referralQuestion._id] !== true) {
+                    toast.error("Please select an option for 'How did you hear about us?'.");
+                    return;
+                }
+            }
+            // ✅ --- END NEW VALIDATION ---
+        }
         // --- Validation End ---
 
         // Build the payload ONLY from questions that have an answer.
@@ -378,48 +393,91 @@ const ReviewPage: React.FC = () => {
                             </tbody>
 
                             {/* --- YES/NO QUESTIONS --- */}
-                            {yesNoQuestions.length > 0 && (
-                                <tbody className="border-t-2 border-gray-200 mt-4 pt-4">
-                                    {yesNoQuestions.map((q) => (
-                                        // ✅ Use React.Fragment to group row and text input row
+                  {/* --- YES/NO QUESTIONS --- */}
+                            {yesNoQuestions.length > 0 && (
+                                <tbody className="border-t-2 border-gray-200 mt-4 pt-4">
+                                    {yesNoQuestions.map((q) => {
+                                    // ✅ --- START: NEW LOGIC ---
+                                    // Check if this is our special question
+                                    const isReferralQuestion = category === 'cfc' && 
+                                                               q.text.toLowerCase().includes("how did you hear about us");
+                                    
+                                    const referralOptions = ['Friends', 'Facebook', 'Instagram', 'Google', 'Other'];
+
+                                    return (
                                         <React.Fragment key={q._id}>
-                                            <tr className="align-middle border-t">
-                                                <td className="py-2 pr-4 w-2/5">{q.text}</td>
-                                                <YesNoBox
-                                                    name={q._id} value="yes" label="YES"
-                                                    checked={answers[q._id] === true}
-                                                    onChange={() => setAnswer(q._id, true)}
-                                                />
-                                                <YesNoBox
-                                                    name={q._id} value="no" label="NO"
-                                                    checked={answers[q._id] === false}
-                                                    onChange={() => setAnswer(q._id, false)}
-                                                />
-                                                <td colSpan={4}></td>
-                                                <td></td>
-                                            </tr>
-                                            
-                                            {/* ✅ UPDATED: Conditionally render text input row ONLY for f&b and cfc */}
-                                            {answers[q._id] === true && (category === "f&b" || category === "cfc") && (
-                                                <tr className="align-middle border-b">
-                                                    <td className="py-2 pr-4 text-right italic text-gray-600">
-                                                        Please specify:
-                                                    </td>
+                                            {isReferralQuestion ? (
+                                                // --- RENDER OUR CUSTOM REFERRAL QUESTION ---
+                                                <tr className="align-middle border-t">
+                                                    <td className="py-2 pr-4 w-2/5">{q.text}</td>
                                                     <td colSpan={11} className="py-2">
-                                                        <input
-                                                            type="text"
-                                                            value={yesNoAnswerText[q._id] || ''}
-                                                            onChange={(e) => setYesNoAnswerText(q._id, e.target.value)}
-                                                            placeholder="Optional comment..."
-                                                            className="w-full text-sm p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                                        />
+                                                        <div className="flex flex-wrap gap-x-4 gap-y-2 items-center">
+                                                            {referralOptions.map(option => (
+                                                                <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                                                                    <input
+                                                                        type="radio"
+                                                                        name={q._id}
+                                                                        value={option}
+                                                                        checked={yesNoAnswerText[q._id] === option}
+                                                                        onChange={() => {
+                                                                            // This is the magic:
+                                                                            // 1. Set the boolean answer to 'true'
+                                                                            setAnswer(q._id, true);
+                                                                            // 2. Set the text answer to the option
+                                                                            setYesNoAnswerText(q._id, option);
+                                                                        }}
+                                                                        className="appearance-none h-5 w-5 rounded-full border border-primary checked:bg-primary checked:border-primary cursor-pointer"
+                                                                    />
+                                                                    <span>{option}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
                                                     </td>
                                                 </tr>
+                                            ) : (
+                                                // --- RENDER A NORMAL YES/NO QUESTION (Your old logic) ---
+                                                <>
+                                                    <tr className="align-middle border-t">
+                                                        <td className="py-2 pr-4 w-2/5">{q.text}</td>
+                                                        <YesNoBox
+                                                            name={q._id} value="yes" label="YES"
+                                                            checked={answers[q._id] === true}
+                                                            onChange={() => setAnswer(q._id, true)}
+                                                        />
+                                                        <YesNoBox
+                                                            name={q._id} value="no" label="NO"
+                                                            checked={answers[q._id] === false}
+                                                            onChange={() => setAnswer(q._id, false)}
+                                                        />
+                                                        <td colSpan={4}></td>
+                                                        <td></td>
+                                                    </tr>
+                                                    
+                                                    {/* Conditional "Please specify" text input */}
+                                                    {answers[q._id] === true && (category === "f&b" || category === "cfc") && (
+                                                        <tr className="align-middle border-b">
+                                                            <td className="py-2 pr-4 text-right italic text-gray-600">
+                                                                Please specify:
+                                                            </td>
+                                                            <td colSpan={11} className="py-2">
+                                                                <input
+                                                                    type="text"
+                                                                    value={yesNoAnswerText[q._id] || ''}
+                                                                    onChange={(e) => setYesNoAnswerText(q._id, e.target.value)}
+                                                                    placeholder="Optional comment..."
+                                                                    className="w-full text-sm p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                />
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </>
                                             )}
                                         </React.Fragment>
-                                    ))}
-                                </tbody>
-                            )}
+                                    )
+                                    // ✅ --- END: NEW LOGIC ---
+                                    })}
+                                </tbody>
+                            )}
                         </table>
                     </div>
 
