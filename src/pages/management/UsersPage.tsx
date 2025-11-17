@@ -189,11 +189,11 @@ const UsersPage: React.FC = () => {
               className="mt-1 block py-2 px-4 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             disabled={editingUser?._id === currentAdminId && editingUser?.role === 'admin'}
             >
-              <option value="staff">Staff (Generic)</option>
-              <option value="staff_room">Staff (Room)</option>
-              <option value="staff_f&b">Staff (F&B)</option>
-              <option value="staff_cfc">Staff (CK)</option>
-              <option value="viewer">Associate (Viewer)</option>
+              <option value="staff">Supervisor</option>
+              <option value="staff_room">Associate (Room)</option>
+              <option value="staff_f&b">Associate (F&B)</option>
+              <option value="staff_cfc">Associate (CK)</option>
+              <option value="viewer">Manager</option>
               <option value="admin">Admin</option>
             </select>
           </div>

@@ -275,7 +275,7 @@ const PublicReviewPage: React.FC = () => {
     }
 
     // Fallback in case publicCategory is missing
-    return `Thank you for choosing Oshin Hotels and Resorts ${hotel}, we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
+    return `Thank you for choosing Oshin Hotels and Resorts ${hotel} , we would greatly appreciate you taking the time to complete a survey. Your evaluation of our operations will provide us the opportunity to assure that your future expectations are met and to provide you with information about new initiatives and programs.`;
   }, [publicHotelId, publicCategory]); // UPDATED: Depend on publicHotelId instead of user
 
   // UPDATED: thankyouNote (FIX: Use publicHotelId instead of user)

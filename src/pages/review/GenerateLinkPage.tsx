@@ -9,7 +9,7 @@ const GenerateLinkPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { generatedToken, isLoading, error, generateToken, clearToken } = useTokenStore();
-  const publicUrl = import.meta.env.VITE_PUBLIC_URL;
+  const publicUrl = window.location.origin;
   //window
   useEffect(() => {
     clearToken();
