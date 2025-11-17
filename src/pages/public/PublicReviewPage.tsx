@@ -13,25 +13,33 @@ import { ReviewPayload, useReviewStore } from "../../stores/reviewStore"; // Imp
 
 // --- Reusable Components (Copied from ReviewPage) ---
 const DottedLineInput = ({
-  label,
-  value,
-  onChange,
+    label,
+    value,
+    onChange,
+    type = "text",     // ✅ ADDED: Default to "text"
+    inputMode,         // ✅ ADDED
+    maxLength          // ✅ ADDED
 }: {
-  label: string;
-  value: string;
-  onChange: (val: string) => void;
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+    type?: string;     // ✅ ADDED
+    inputMode?: "numeric" | "text" | "tel" | "email"; // ✅ ADDED
+    maxLength?: number; // ✅ ADDED
 }) => (
-  <div className="flex items-baseline space-x-2 w-full">
-    <label className="text-sm text-gray-800 whitespace-nowrap font-medium">
-      {label}:
-    </label>
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full border-b border-dotted border-gray-500 focus:outline-none focus:border-solid focus:border-primary"
-    />
-  </div>
+    <div className="flex items-baseline space-x-2 w-full">
+        <label className="text-sm text-gray-800 whitespace-nowrap font-medium">
+            {label}:
+        </label>
+        <input
+            type={type}         // ✅ UPDATED
+            inputMode={inputMode} // ✅ ADDED
+            maxLength={maxLength} // ✅ ADDED
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full border-b border-dotted border-gray-500 focus:outline-none focus:border-solid focus:border-primary"
+        />
+    </div>
 );
 const RadioBox = ({
   name,
@@ -119,7 +127,14 @@ const PublicReviewPage: React.FC = () => {
     resetReview,
   } = useReviewStore();
 
-  // REMOVED: const user = useAuthStore((state) => state.user); // No longer needed for public page
+  const handlePhoneChange = (value: string) => {
+    // 1. Remove all non-numeric characters
+    const numericValue = value.replace(/[^0-9]/g, "");
+    // 2. Limit to 10 digits
+    const limitedValue = numericValue.slice(0, 10);
+    // 3. Update the state
+    setGuestPhone(limitedValue);
+  };
 
   // UPDATED: Determine which logo to show (FIXED: Use publicHotelId from token instead of user)
   const logoToShow = useMemo(() => {
@@ -570,12 +585,15 @@ const PublicReviewPage: React.FC = () => {
                   value={guestName}
                   onChange={setGuestName}
                 />
-                <div className="flex flex-col md:flex-row gap-4">
-                  <DottedLineInput
-                    label="Phone"
-                    value={guestPhone}
-                    onChange={setGuestPhone}
-                  />
+               <div className="flex flex-col md:flex-row gap-4">
+                  <DottedLineInput
+                    label="Whats app No"
+                    value={guestPhone}
+                    onChange={handlePhoneChange} // ✅ UPDATED
+                    type="tel"                 // ✅ ADDED
+                    inputMode="numeric"        // ✅ ADDED
+                    maxLength={10}             // ✅ ADDED
+                  />
                   <DottedLineInput
                     label="Room No"
                     value={guestRoom}
@@ -595,10 +613,13 @@ const PublicReviewPage: React.FC = () => {
                   onChange={setGuestName}
                 />
                 <DottedLineInput
-                  label="Phone"
-                  value={guestPhone}
-                  onChange={setGuestPhone}
-                />
+                  label="Phone"
+                  value={guestPhone}
+                    onChange={handlePhoneChange} // ✅ UPDATED
+                    type="tel"                 // ✅ ADDED
+                    inputMode="numeric"        // ✅ ADDED
+                    maxLength={10}             // ✅ ADDED
+             />
               </div>
             )}
           </section>

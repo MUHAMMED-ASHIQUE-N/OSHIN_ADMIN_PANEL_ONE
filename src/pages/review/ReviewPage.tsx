@@ -10,11 +10,27 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from "../../stores/authStore";
 
 // Reusable components (No changes)
-const DottedLineInput = ({ label, value, onChange }: { label: string; value: string; onChange: (val: string) => void }) => (
+const DottedLineInput = ({
+    label,
+    value,
+    onChange,
+    type = "text",     // ✅ ADDED: Default to "text"
+    inputMode,         // ✅ ADDED
+    maxLength          // ✅ ADDED
+}: {
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+    type?: string;     // ✅ ADDED
+    inputMode?: "numeric" | "text" | "tel" | "email"; // ✅ ADDED
+    maxLength?: number; // ✅ ADDED
+}) => (
     <div className="flex items-baseline space-x-2 w-full">
         <label className="text-sm text-gray-800 whitespace-nowrap font-medium">{label}:</label>
         <input
-            type="text"
+            type={type}         // ✅ UPDATED
+            inputMode={inputMode} // ✅ ADDED
+            maxLength={maxLength} // ✅ ADDED
             value={value}
             onChange={e => onChange(e.target.value)}
             className="w-full border-b border-dotted border-gray-500 focus:outline-none focus:border-solid focus:border-primary"
@@ -34,8 +50,8 @@ const RadioBox = ({ name, value, checked, onChange }: { name: string; value: str
     </td>
 );
 const YesNoBox = ({ name, value, checked, onChange, label }: { name: string; value: string; checked: boolean; onChange: () => void; label: string }) => (
-    <td colSpan={3} className="py-2">
-        <label className="flex items-center justify-center space-x-2 cursor-pointer">
+    <td colSpan={3} className=" py-2">
+        <label className="flex items-center pl-2 justify-start space-x-2 cursor-pointer">
             <input
                 type="radio"
                 name={name}
@@ -78,6 +94,15 @@ const ReviewPage: React.FC = () => {
     } = useReviewStore();
    const logout = useAuthStore((state) => state.logout);
     const user = useAuthStore((state) => state.user);
+
+    const handlePhoneChange = (value: string) => {
+        // 1. Remove all non-numeric characters
+        const numericValue = value.replace(/[^0-9]/g, '');
+        // 2. Limit to 10 digits
+        const limitedValue = numericValue.slice(0, 10);
+        // 3. Update the state
+        setGuestPhone(limitedValue);
+    };
 
 // ✅ STEP 2: Determine which logo to show (FIXED)
     const logoToShow = useMemo(() => {
@@ -413,7 +438,7 @@ const ReviewPage: React.FC = () => {
                                                     <td colSpan={11} className="py-2">
                                                         <div className="flex flex-wrap gap-x-4 gap-y-2 items-center">
                                                             {referralOptions.map(option => (
-                                                                <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                                                                <label key={option} className="flex items-center pl-2 space-x-2 cursor-pointer">
                                                                     <input
                                                                         type="radio"
                                                                         name={q._id}
@@ -437,8 +462,8 @@ const ReviewPage: React.FC = () => {
                                             ) : (
                                                 // --- RENDER A NORMAL YES/NO QUESTION (Your old logic) ---
                                                 <>
-                                                    <tr className="align-middle border-t">
-                                                        <td className="py-2 pr-4 w-2/5">{q.text}</td>
+                                                    <tr className=" border-t">
+                                                        <td className="py-2  pr-4 w-2/5">{q.text}</td>
                                                         <YesNoBox
                                                             name={q._id} value="yes" label="YES"
                                                             checked={answers[q._id] === true}
@@ -503,41 +528,47 @@ const ReviewPage: React.FC = () => {
 
                         {/* === ROOM GUEST INFO === */}
                         {category === "room" && (
-                            <div className="space-y-4">
-                                <DottedLineInput
-                                    label="Guest Name"
-                                    value={guestName}
-                                    onChange={setGuestName}
-                                />
-                                <div className="flex flex-col md:flex-row gap-4">
-                                    <DottedLineInput
-                                        label="phone"
-                                        value={guestPhone}
-                                        onChange={setGuestPhone}
-                                    />
-                                    <DottedLineInput
-                                        label="Room No"
-                                        value={guestRoom}
-                                        onChange={setGuestRoom}
-                                    />
-                                </div>
-                            </div>
+                     <div className="space-y-4">
+                                <DottedLineInput
+                                    label="Guest Name"
+                                    value={guestName}
+                                    onChange={setGuestName}
+                                />
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <DottedLineInput
+                                        label="What's app No"
+                                        value={guestPhone}
+                                    onChange={handlePhoneChange} // ✅ UPDATED
+                                    type="tel"                 // ✅ ADDED
+                                    inputMode="numeric"        // ✅ ADDED
+                                    maxLength={10}             // ✅ ADDED
+                                    />
+                                    <DottedLineInput
+                                        label="Room No"
+                                        value={guestRoom}
+                                        onChange={setGuestRoom}
+                                    />
+                              _</div>
+                            </div>
                         )}
 
                         {/* === F&B or CFC GUEST INFO === */}
                         {/* 🔥 UPDATED: Show Name and Phone for f&b and cfc */}
                         {(category === "f&b" || category === "cfc") && (
                             <div className="space-y-4">
-                                <DottedLineInput
-                                    label="Guest Name"
-                                    value={guestName}
-                                    onChange={setGuestName}
-                                />
-                                <DottedLineInput
-                                    label="phone"
-                                    value={guestPhone}
-                                    onChange={setGuestPhone}
-                                />
+                                <DottedLineInput
+                                    label="Guest Name"
+                                    value={guestName}
+                                    onChange={setGuestName}
+                                />
+                                <DottedLineInput
+                                    label="What's app No"
+                                    value={guestPhone}
+                                    onChange={handlePhoneChange} // ✅ UPDATED
+                                    type="tel"                 // ✅ ADDED
+                                    inputMode="numeric"        // ✅ ADDED
+                                    maxLength={10}             // ✅ ADDED
+                                />
                             </div>
                         )}
                     </section>
