@@ -613,7 +613,7 @@ const PublicReviewPage: React.FC = () => {
                   onChange={setGuestName}
                 />
                 <DottedLineInput
-                  label="Phone"
+                  label="What's app No"
                   value={guestPhone}
                     onChange={handlePhoneChange} // ✅ UPDATED
                     type="tel"                 // ✅ ADDED
