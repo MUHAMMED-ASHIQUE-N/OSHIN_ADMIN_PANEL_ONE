@@ -202,9 +202,16 @@ export const useAnalyticsStore = create<AnalyticsState>((set, _) => ({
       set({ mainChartData: formattedMainData, isLoadingMain: false });
 
       // --- Process and set breakdown data ---
-      const breakdownResultData = breakdownRes?.data?.data ?? [];
-      console.log("Setting breakdownData:", breakdownResultData);
-      set({ breakdownData: breakdownResultData, isLoadingBreakdown: false });
+    const rawBreakdownData = breakdownRes?.data?.data ?? [];
+
+// ✅ SANITIZATION: Map through items and ensure 'value' is a number (default to 0 if null)
+const breakdownResultData = rawBreakdownData.map((item: any) => ({
+    ...item,
+    value: (item.value !== null && item.value !== undefined) ? Number(item.value) : 0
+}));
+
+console.log("Setting breakdownData:", breakdownResultData);
+set({ breakdownData: breakdownResultData, isLoadingBreakdown: false });
 
 
     } catch (err) {

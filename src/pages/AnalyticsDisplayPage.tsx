@@ -10,25 +10,28 @@
     import { useChart } from "../context/ChartContext";
 
     // BreakdownChart component
-    const BreakdownChart: React.FC<{ data: { name: string; value: number } }> = ({ data }) => {
+ const BreakdownChart: React.FC<{ data: { name: string; value: number | null } }> = ({ data }) => {
+    // ✅ SAFELY HANDLE VALUE: Use 0 if data.value is null/undefined
+    const safeValue = typeof data.value === 'number' ? data.value : 0;
+
     const chartData = useMemo(() => [
-        { name: data.name, value: data.value },
-        { name: "", value: Math.max(0, 10 - data.value) },
-    ], [data]);
+        { name: data.name, value: safeValue },
+        { name: "", value: Math.max(0, 10 - safeValue) },
+    ], [data.name, safeValue]);
 
     return (
-        <div className="w-full text-center py-4 bg-[#FAFBFF] rounded-lg shadow-md flex flex-col h-full"> {/* Added flex full height */}
-        <h3 className="font-semibold text-sm text-[#949CA1]  px-6 h-12 flex items-center justify-center" title={data.name}> {/* Increased height slightly */}
-            {data.name}
-        </h3>
-        {/* Use the new 'size' prop. 'small' disables the legend. */}
-        <div className="flex-1"> {/* Allow chart to fill  space */}
-            <PieChartt data={chartData} title={null} size="small" />
-        </div>
-        <p className="font-bold text-xl text-primary mt-2">{data.value.toFixed(2)}</p>
+        <div className="w-full text-center py-4 bg-[#FAFBFF] rounded-lg shadow-md flex flex-col h-full">
+            <h3 className="font-semibold text-sm text-[#949CA1] px-6 h-12 flex items-center justify-center" title={data.name}>
+                {data.name}
+            </h3>
+            <div className="flex-1">
+                <PieChartt data={chartData} title={null} size="small" />
+            </div>
+            {/* ✅ FIX CRASH HERE: Use safeValue instead of data.value */}
+            <p className="font-bold text-xl text-primary mt-2">{safeValue.toFixed(2)}</p>
         </div>
     );
-    };
+};
 
 
     // Main page component
